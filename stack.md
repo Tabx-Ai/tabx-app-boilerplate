@@ -33,6 +33,7 @@ Article IX) so the next service is a copy of the last:
 | `services/<name>/` | one domain: `controller.ts` + `service.ts` + `repository.ts`, **always all three** | `config/`; and — **repository only** — `infrastructure/`, `external/` |
 | `infrastructure/` | clients for **persistence**: a database, a cache, object storage | `config/` |
 | `external/` | clients for **third-party APIs** | `config/` |
+| `policies/` | **every access rule, and the check** — predicates over the injected identity | the context **type**, and `config/` |
 
 - **The `infrastructure` / `external` split is by who owns the thing, not by protocol.** A
   database client and an object-storage client are both `infrastructure/`; a vendor's REST
@@ -41,6 +42,8 @@ Article IX) so the next service is a copy of the last:
   `router.ts` and nothing else shared — measured: **two lines**, the mount and its import.
 - **Only a repository may reach a client.** A test reads the sources to prove it, because the
   rule is invisible at runtime: a service that imports a database still answers its route.
+- **Policies are code, in one folder**, and `RoleGuard` on the frontend is **advice about what
+  to render** — the server checks every guarded operation again. See constitution Article XII.
 
 ## backend/ — Hono on AWS Lambda
 

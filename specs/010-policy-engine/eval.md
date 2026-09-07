@@ -38,6 +38,37 @@ Run in `apps/boilerplate` (each project's own suite) unless a case says otherwis
 - **What is NOT verified here:** naming (001), layering beyond the amended count (004),
   transport (005), the gate (006), the palette (007), identity (008), navigation (011).
 
-## Results
+## Results — run 2026-09-07
 
-_Not run — spec drafted, not implemented._
+**Twelve of thirteen pass. E013's mirror-clone half is held**, because pushing the mirror is the
+owner's gate and they are away; everything it asserts was verified in place.
+
+| Case | Result | Evidence |
+| --- | --- | --- |
+| **E001** | **pass** | A scan finds no predicate declared outside `policies/`. |
+| **E002** | **pass** | `policies/` imports the context **type** and `config/` and nothing else — asserted by a source scan over every file in the folder, covering `services/`, `infrastructure/`, `external/`, the router framework and the environment. |
+| **E003** | **pass** | The folder set is **exactly five**. **004's assertion was AMENDED, not duplicated** — one folder-set test in the suite, and `policies` is not carved out with an exclusion list, which would have left the constitution and the test disagreeing about the number. |
+| **E004** | **pass** | `check` returns a **boolean, not a promise** — asserted on the type, because an accidental `async` reads correctly at every call site and would make every answer a truthy promise, allowing everything silently. Two calls with one context give one answer. |
+| **E005** | **pass** | Every shipped policy allows the **emptiest legal context** — no role, no manager. A fixture that happened to be an admin would have passed while the default was secretly restrictive. |
+| **E006** | **pass** | An undeclared name **refuses**, and throws in development naming the unknown policy. |
+| **E007** | **pass** | Predicates over the injected hierarchy decide correctly, and their **absences do not throw**: a `null` role and a `null` manager both read as "no". |
+| **E008** | **pass** | A guarded route refuses **403 naming the policy**, and the service never runs. |
+| **E009** | **pass — the centrepiece** | The same guarded request made with **no interface involved** — exactly what a deep link, a stale tab or a second window sends — is still **403**. This is the case that separates a permission system from a UI convention. |
+| **E010** | **pass** | One guarded route and one open route on the sample, so the pattern and its absence are both visible. The decisions route lives in a **normal service folder** with the three files, not inside the rule library. |
+| **E011** | **pass** | **Ten guards on one screen produce one request.** |
+| **E012** | **pass** | Three empty renders, asserted **separately**: pending, failed, and an undeclared policy. Plus a supplied fallback rendering in place of the children. |
+| **E013** | **pass in place; mirror half held** | Backend **56** tests, frontend **60**, both typechecks clean, frontend build clean. Constitution **2.2.0 → 2.3.0** (MINOR, Article XII appended) with the cost named **and** the four-to-five amendment recorded. The clone-from-the-mirror half needs a push the owner has not authorised. |
+
+## What the run found
+
+- **`satisfies` keeps each predicate's literal type**, so a policy written `() => true` is a
+  zero-argument function to the compiler and cannot be called with a context. `check` and
+  `decisionsFor` widen to the declared signature, in one place each. Keeping `satisfies` is
+  worth that — it is what makes the policy names a union rather than `string`.
+- **This spec changes how code is written, so it owed the skills too** — the lesson spec 009
+  recorded. `hono` now teaches guarding a route and the fifth home; `sdd` teaches that a rule is
+  a policy rather than an `if` in a handler. That is the first time that rule was applied by the
+  spec that created the obligation rather than by a later cleanup.
+- **The staleness is inherited and stated, not fixed.** A predicate reading the role reads a
+  value the platform caches with no eviction event, so a revoked role can keep granting for
+  about a minute. Bounded by E009's enforcement running on **every** operation.

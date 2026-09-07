@@ -15,11 +15,13 @@ import { Hono } from 'hono';
 
 import type { AppEnv } from './context.js';
 import { errorBody } from './envelope.js';
+import { accessController } from './services/access/index.js';
 import { helloController } from './services/hello/index.js';
 
 export const app = new Hono<AppEnv>();
 
 // --- Services: one mount each, and nothing else ---------------------------------------
+app.route('/access', accessController);
 app.route('/hello', helloController);
 
 // --- The two rules that keep failures on the wire, not in the invoker ------------------

@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 2.2.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 2.3.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -160,16 +160,17 @@ The runtime is fixed, and it is not negotiable from inside a spec.
 
 ## Article IX — Layering Inside `backend/src`
 
-`backend/src` has **four homes** beside the entry files (`handler.ts`, `router.ts`,
+`backend/src` has **five homes** beside the entry files (`handler.ts`, `router.ts`,
 `context.ts`, `envelope.ts`, `dev-server.ts`). The set is fixed, so the next service is a copy
 of the last rather than an invention.
 
 | Folder | Holds | May import |
 | --- | --- | --- |
 | `config/` | environment parsing, once, typed (Article VI) | nothing of the app's |
-| `services/<name>/` | one domain: controller + service + repository | `config/`; and — **repository only** — `infrastructure/`, `external/` |
+| `services/<name>/` | one domain: controller + service + repository | `config/`, `policies/`; and — **repository only** — `infrastructure/`, `external/` |
 | `infrastructure/` | clients for **persistence** — a database, a cache, object storage | `config/` |
 | `external/` | clients for **third-party APIs** | `config/` |
+| `policies/` | every access rule, and the check (Article XII) | the context **type**, and `config/` |
 
 1. **The split between `infrastructure/` and `external/` is by WHO OWNS THE THING, not by
    protocol.** A database client and an object-storage client are both `infrastructure/`
@@ -235,6 +236,33 @@ service modules; this Article says what a service module *is*.
    pin its own half. That is a real cost, accepted knowingly — the alternative breaks the
    standalone-build rule that makes this template cloneable at all.
 
+## Article XII — Policies Are Code, In One Folder
+
+1. **Every rule about who may do what lives in `backend/src/policies/`.** A rule written inside
+   a service is one nobody can list, test, or show the interface.
+2. **A policy is a named string mapped to a predicate over the injected identity.** No stored
+   rules, no administration screen, no per-workspace overrides: policies are **code**, reviewed
+   and deployed like code.
+3. **A predicate reads the context and nothing else.** No database, no network, no clock —
+   everything a rule needs is already in the identity the platform injects, which is what that
+   identity is for. A rule that must look something up has become a service-level check.
+4. **The check is pure and synchronous.** An accidental asynchronous one reads correctly at
+   every call site and makes every answer a truthy promise — allowing everything, silently.
+5. **The shipped policies allow everyone.** An app **tightens** a rule by editing a predicate,
+   never by inventing a mechanism.
+6. **An undeclared policy name is REFUSED**, and in development it raises. Allow-to-all is about
+   policies this app *declares*; a typo names no policy, and rendering a control for one is the
+   failure nobody notices.
+7. **The server is the enforcement; the interface's guard is advice.** Every guarded operation
+   is checked before its service runs and answers a refusal **naming the policy**. A deep link,
+   a stale tab or a second window reaches actions no interface offered.
+8. **Answering *what may I do* is a service**, in its own folder with the three files — not a
+   route registered from inside `policies/`, which would make the rule library an HTTP surface
+   as well.
+9. **A decision read from the identity can be briefly stale**, because the platform caches that
+   identity and announces no change to it. The window is one of **stale input, never unchecked
+   action** — §7 still runs on every operation.
+
 ## Article XI — One Light Palette
 
 1. **There is one palette, and it is light.** It lives in `frontend/src/index.css` under
@@ -265,6 +293,30 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **2.3.0** (2026-09-07) — **Policies are code, in one folder, and the server is the
+  enforcement.** Adds **Article XII**, and amends Article IX's folder set from four to five.
+
+  Why: an app could say who may *open* it and nothing about who may do *what* inside. Without a
+  named place, the first rule would be an `if` halfway down a handler — a rule nobody can list,
+  test, or show the interface, and the second one would be written somewhere else again.
+
+  The two clauses that carry the weight are §3 and §7. **A predicate reads the injected identity
+  and nothing else**, so a rule cannot quietly become a query; and **the interface's guard is
+  advice**, because a deep link or a stale tab reaches actions no screen rendered. A test
+  asserts exactly that: the same guarded request, made with no interface involved, is refused.
+
+  **What is given up, stated because an entry that reads as pure gain is a sales pitch.**
+  Rules are **code**, so changing one is a deploy — an app that wants a workspace administrator
+  to edit rules at runtime needs a different mechanism and a spec to justify it. Every service
+  now ships a `repository.ts` **and** may consult a folder it did not previously know about, and
+  the folder count moved for the second time. And §9 admits a real limit: the identity a
+  predicate reads is cached by the platform with no eviction event, so **a revoked role can keep
+  granting for around a minute** — bounded to stale input rather than unchecked action, because
+  §7 checks every operation, but not eliminated here.
+
+  MINOR: a new Article, appended so nothing renumbers, plus one number in Article IX's table
+  changed in the same commit that makes it true.
 
 - **2.2.0** (2026-09-07) — **An app is told who is calling, not just that somebody is.** Extends
   **Article V §1**.

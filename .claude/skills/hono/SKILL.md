@@ -45,6 +45,7 @@ The answer is always `{ status, body }`. **Both directions are typed** — see
 | `services/<name>/` | one domain: controller + service + repository | `config/`; and — **repository only** — `infrastructure/`, `external/` |
 | `infrastructure/` | clients for **persistence**: a database, a cache, object storage | `config/` |
 | `external/` | clients for **third-party APIs** | `config/` |
+| `policies/` | **every access rule, and the check** | the context **type**, and `config/` |
 
 **The split between the two client homes is by WHO OWNS THE THING, not by protocol.** A
 database client and an object-storage client are both `infrastructure/` though one speaks TCP
@@ -88,6 +89,35 @@ app.route('/hello', helloController);
 
 **A service that needs another domain's data calls that domain's SERVICE, never its
 repository.** The repository is the domain's private seam.
+
+## Guarding a route
+
+Rules live in `src/policies/`, as named predicates over the injected identity — **not** as an
+`if` inside a handler, which is a rule nobody can list or show the interface.
+
+```ts
+// policies/index.ts — every rule in the app, in one place
+export const policies = {
+  'hello:write': (ctx) => ctx.hasRole('admin'),
+} satisfies Record<string, (ctx: UserContext) => boolean>;
+
+// services/hello/controller.ts — the check runs BEFORE the service
+.post('/', async (c) => {
+  if (!check('hello:write', c.env.ctx)) {
+    return c.json(errorBody('FORBIDDEN', 'You do not have permission (hello:write).'), 403);
+  }
+  …
+})
+```
+
+- **Check before the service runs**, so a refusal costs nothing and the service never begins
+  work it may not finish.
+- **Name the policy in the refusal** — a caller who cannot act should be able to tell somebody
+  which rule stopped them.
+- **A predicate reads the context and nothing else.** No database, no fetch. Everything a rule
+  needs is already in the injected identity.
+- **This is the enforcement.** The frontend's `RoleGuard` decides what to *render*; a deep link
+  or a stale tab reaches actions no interface offered.
 
 ## The context seam
 

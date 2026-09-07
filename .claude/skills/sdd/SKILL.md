@@ -57,6 +57,9 @@ One folder per ask: `specs/NNN-slug/` (zero-padded, kebab-case, next free number
 - **A frontend feature** is a page or component over the one client, and its domain gets two
   files: `api/<domain>/path.ts` (every path it serves, and nowhere else) and `controller.ts`
   (the typed calls). **A component never writes a path and never imports the client.**
+- **A rule about who may do what is a policy** in `src/policies/`, checked in the controller
+  before the service runs, and shown by `RoleGuard` on the frontend — never an `if` inside a
+  handler, and never a rule the interface enforces on its own.
 - A design that adds a second entry point, an auth check of its own, or a credential in
   long-lived browser storage is unconstitutional — redesign, don't defer.
 - **New env keys** appear in three places in one commit: `src/config/`, `.env.example`, and

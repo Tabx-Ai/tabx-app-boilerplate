@@ -1,6 +1,7 @@
 # Spec 010 — The policy engine: one `policies/` folder, allow-to-all by default, and a `RoleGuard` that asks the backend
 
-**Status:** drafted
+**Status:** implemented — 28 of 29 tasks green, eval **12 of 13**. The one held task is the
+mirror push, which is the owner's gate; everything E013 asserts was verified in place
 **Target:** `backend/src/policies/` (**a fifth top-level home**, which amends 004),
 `frontend/` (`RoleGuard` and the decisions hook), `constitution.md`, `stack.md`, `memory/`.
 **Depends on:** **004** (the layering this amends), **005** (the client the guard's call rides),
@@ -138,6 +139,23 @@ flips.
   folder-set assertion.
 - **SC-013** The constitution takes a **MINOR** bump whose entry names the cost **and** records
   the four-to-five amendment.
+
+## A staleness this spec inherits, and does not fix
+
+**The role a predicate reads can be up to a minute out of date.** The platform builds the
+injected identity, caches it briefly, and — as the record of spec 008 notes — **has no eviction
+event to subscribe to**: a role changed in the workspace is not announced, so the cache expires
+on a timer rather than on the change.
+
+So a role revoked in the workspace **keeps granting inside this app** until that window passes.
+
+- **It is not this spec's to fix.** Minting the missing event is a platform change, and
+  inventing one here would put an app's policy engine in charge of the platform's cache.
+- **It is not hidden either.** A predicate reading `ctx.hasRole(…)` is reading a value with a
+  short staleness, and this is where somebody will look for that.
+- **What bounds it:** the server checks on **every** guarded operation (FR-009), so the window
+  is one of *stale input*, never of *unchecked action* — and whether the person may open the app
+  at all is decided fresh on every request, uncached.
 
 ## Edge cases
 

@@ -50,9 +50,18 @@ const code = (relative: string): string =>
 
 const serviceNames = (): string[] => dirsIn(SRC + 'services');
 
-describe('the four homes (Article IX)', () => {
-  it('src/ holds exactly config, external, infrastructure and services', () => {
-    expect(dirsIn(SRC)).toEqual(['config', 'external', 'infrastructure', 'services']);
+describe('the homes (Article IX)', () => {
+  it('src/ holds exactly config, external, infrastructure, policies and services', () => {
+    // FIVE since the policy engine added `policies/`. This assertion is AMENDED rather than
+    // duplicated, and `policies` is not carved out with an exclusion list: one assertion, one
+    // answer, or the constitution and the test end up disagreeing about the number.
+    expect(dirsIn(SRC)).toEqual([
+      'config',
+      'external',
+      'infrastructure',
+      'policies',
+      'services',
+    ]);
   });
 
   it('infrastructure/ and external/ each state what belongs in them', () => {
@@ -96,6 +105,23 @@ describe('router.ts is a mount list (Article IX §4)', () => {
     expect(code).toMatch(/\.route\s*\(/);
     expect(code).toMatch(/\.notFound\s*\(/);
     expect(code).toMatch(/\.onError\s*\(/);
+  });
+});
+
+describe('policies/ is a rule library, not a layer (the policy Article)', () => {
+  it('imports the context type and config, and nothing else of the app', () => {
+    // A policy that reaches a repository has become a service. Everything a predicate needs is
+    // already in the injected identity — which is what that identity is for.
+    for (const file of filesIn(`${SRC}policies`)) {
+      const source = code(`policies/${file}`);
+      for (const forbidden of ['services/', 'infrastructure/', 'external/']) {
+        expect(source, `policies/${file} imports ${forbidden}`).not.toMatch(
+          new RegExp(`from\\s+['"][^'"]*${forbidden}`),
+        );
+      }
+      expect(source, `policies/${file} imports hono`).not.toMatch(/from\s+['"]hono/);
+      expect(source, `policies/${file} reads process.env`).not.toMatch(/process\.env/);
+    }
   });
 });
 
