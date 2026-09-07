@@ -1,33 +1,26 @@
 /**
- * The internal router (constitution Article IV §5): Hono as a ROUTER over the envelope,
- * never a server. One route registration per service; a service receives its parsed input
- * and the typed AppContext — it never touches the raw event or this file's plumbing.
+ * The internal router (constitution Article IV §5, Article IX §4): the router as a ROUTER
+ * over the envelope, never a server.
  *
- * Adding a service: create src/services/<name>/, register its routes here, mirror it in
- * test/services/<name>/. See .claude/skills/hono/SKILL.md.
+ * **This file is a mount list.** One line per service, plus the two rules that keep failures
+ * on the wire. It declares no route of its own — a service's paths, and the parsing of its
+ * input, belong to that service's `controller.ts`, which is what makes adding a service touch
+ * one line of shared code instead of growing this file.
+ *
+ * Adding a service: create `src/services/<name>/` with its three files (controller, service,
+ * repository), add one `app.route(...)` below, and mirror it in `test/services/<name>/`.
+ * See `.claude/skills/hono/SKILL.md`.
  */
 import { Hono } from 'hono';
 
-import type { AppContext } from './context.js';
+import type { AppEnv } from './context.js';
 import { errorBody } from './envelope.js';
-import { hello, helloInputSchema } from './services/hello/index.js';
-
-/** The context rides Hono's env so services can stay plain functions taking (input, ctx). */
-export type AppEnv = { Bindings: { ctx: AppContext } };
+import { helloController } from './services/hello/index.js';
 
 export const app = new Hono<AppEnv>();
 
-// --- Services ------------------------------------------------------------------------
-// The route parses the input BEFORE the service runs, so bad input is a 400 naming the
-// field — never a service throw dressed as a 500. Services receive typed input only.
-app.get('/hello', async (c) => {
-  const input = helloInputSchema.safeParse({ name: c.req.query('name') });
-  if (!input.success) {
-    const fields = [...new Set(input.error.issues.map((i) => String(i.path[0] ?? '?')))];
-    return c.json(errorBody('BAD_INPUT', `Invalid input: ${fields.join(', ')}.`), 400);
-  }
-  return c.json(hello(input.data, c.env.ctx), 200);
-});
+// --- Services: one mount each, and nothing else ---------------------------------------
+app.route('/hello', helloController);
 
 // --- The two rules that keep failures on the wire, not in the invoker ------------------
 

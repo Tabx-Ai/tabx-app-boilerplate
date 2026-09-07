@@ -23,6 +23,18 @@ const contextSchema = z.object({
 export type AppContext = z.infer<typeof contextSchema>;
 
 /**
+ * The router environment: the context rides the router's `env` so a service can stay a plain
+ * function of `(input, ctx, repo)`.
+ *
+ * It lives HERE rather than in `router.ts` on purpose. A service's controller needs this type,
+ * and `router.ts` imports every controller — so declaring it there would make the two files
+ * import each other. Type-only imports are erased and would not break at runtime, but a
+ * cycle that exists only in the type graph is still a cycle somebody has to reason about.
+ * The context's own module is the honest home for it.
+ */
+export type AppEnv = { Bindings: { ctx: AppContext } };
+
+/**
  * Parse the proxy-injected identity. Returns the typed context, or `null` when it is
  * absent or malformed — the handler turns `null` into the refusal envelope, so this
  * module stays a pure parser.

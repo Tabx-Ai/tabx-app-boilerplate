@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 1.0.1  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 1.1.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -119,6 +119,53 @@ The runtime is fixed, and it is not negotiable from inside a spec.
 
 ---
 
+## Article IX — Layering Inside `backend/src`
+
+`backend/src` has **four homes** beside the entry files (`handler.ts`, `router.ts`,
+`context.ts`, `envelope.ts`, `dev-server.ts`). The set is fixed, so the next service is a copy
+of the last rather than an invention.
+
+| Folder | Holds | May import |
+| --- | --- | --- |
+| `config/` | environment parsing, once, typed (Article VI) | nothing of the app's |
+| `services/<name>/` | one domain: controller + service + repository | `config/`; and — **repository only** — `infrastructure/`, `external/` |
+| `infrastructure/` | clients for **persistence** — a database, a cache, object storage | `config/` |
+| `external/` | clients for **third-party APIs** | `config/` |
+
+1. **The split between `infrastructure/` and `external/` is by WHO OWNS THE THING, not by
+   protocol.** A database client and an object-storage client are both `infrastructure/`
+   though one speaks TCP and the other HTTPS; a payment provider's client is `external/`
+   though it speaks the same HTTPS. *"It makes an HTTP call"* is the wrong test, and it is the
+   one that will be reached for.
+2. **Every service folder carries all three files, always** — `controller.ts`, `service.ts`,
+   `repository.ts` — **including a service that persists nothing**, whose repository is a
+   named, empty seam.
+   - **What it buys:** the first read has exactly one legal home and arrives with no decision
+     to make. The alternative — add the file when you need it — is the moment somebody invents
+     a place instead.
+   - **What it costs, stated because it is not free:** a pass-through file in services that
+     never read anything, which reads as ceremony the first time.
+3. **The controller owns its routes.** It exports a router sub-app declaring its own paths,
+   parses its own input against a schema, and answers a bad input as a **400 naming the
+   field** — raised there, never leaking as a service throw dressed as a 500.
+4. **`router.ts` is a mount list.** One mount per service, plus the two rules that keep
+   failures on the wire (unknown path, thrown error), and nothing else. Adding a service
+   touches **one line** of shared code.
+5. **The service holds the domain logic and imports no framework and no client.** It is a
+   function of typed input, the typed context, and its repository — no router, no
+   `process.env`, no invocation event, no fetch.
+6. **The repository is the ONLY file that may import `infrastructure/` or `external/`.** A
+   controller or a service importing either is a defect, and it is enforced by a test that
+   reads the sources rather than by review.
+7. **A service that needs another domain's data calls that domain's SERVICE, never its
+   repository.** The repository is the domain's private seam; reaching into another service's
+   repository is the same mistake as reaching into its database.
+8. **A service folder may hold an `index.ts` re-exporting its own surface, and nothing else.**
+   No `types.ts`, no `utils.ts` — a fourth file is a sign the service is two.
+
+**This sharpens Article IV §5, it does not replace it.** §5 says the router dispatches to
+service modules; this Article says what a service module *is*.
+
 ## Governance
 
 1. **Amendments are versioned (semver)** — MAJOR: a principle removed or redefined;
@@ -131,6 +178,36 @@ The runtime is fixed, and it is not negotiable from inside a spec.
 ---
 
 ## Changelog
+
+- **1.1.0** (2026-09-07) — **`backend/src` has four homes, and a service has three files.**
+  Adds **Article IX**, appended so nothing renumbers.
+
+  Why: a service was a single `index.ts` holding its input schema, its domain logic and its
+  response shape, and there was **nowhere to put a client** — no `infrastructure/`, no
+  `external/`. That is survivable for the sample and wrong as a seed: the first app that needs
+  a database or a third-party service puts the client wherever whoever wrote it decided, and
+  the second app decides again. Route declarations also lived in `router.ts`, so every new
+  service edited the one file every other service edits, and the service folder was not
+  actually the service's edge.
+
+  Two clauses are the Article. **The `infrastructure`/`external` split is by who owns the
+  thing, not by protocol** — because "it makes an HTTP call" is the test that will be reached
+  for, and it puts an object-storage client in the wrong folder. And **the repository is the
+  only file that may touch either**, enforced by a test that reads the sources, because a rule
+  about import direction that nothing checks is a rule for however long people remember it.
+
+  **What is given up, stated because an entry that reads as pure gain is a sales pitch.**
+  Every service now ships a `repository.ts` **even when it persists nothing** — a
+  pass-through file that reads as ceremony the first time somebody writes one. That is the
+  owner's decision, taken against the recommendation of "add it when the service needs it",
+  and what it buys is that the first read has exactly one legal home and needs no decision.
+  The cost is real and it is paid in every service.
+
+  **It sharpens Article IV §5 rather than replacing it** — §5 already said the router
+  dispatches to service modules; this says what a service module is. Nothing else changes
+  meaning, and no dependency is added: the folders are homes, not implementations.
+
+  MINOR: a new Article; nothing removed or redefined. Owner's decision.
 
 - **1.0.1** (2026-09-07) — **The template describes itself, not where it came from.** Wording
   only: no principle added, removed or redefined.
