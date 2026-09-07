@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+
+    "noEmit": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+
+    // Constitution Article IX §1: strict, nothing opted back out.
+    // create-vite no longer sets this — it must be added by hand, and to
+    // tsconfig.node.json as well.
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // `paths` WITHOUT `baseUrl`: modern TypeScript deprecates baseUrl (TS5101)
+    // and resolves relative mappings against this file's own directory.
+    "paths": { "@/*": ["./src/*"] },
+
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
+  },
+  "include": ["src"]
+}

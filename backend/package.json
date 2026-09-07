@@ -1,0 +1,26 @@
+{
+  "name": "app-backend",
+  "version": "0.0.1",
+  "private": true,
+  "description": "The app's backend: one stateless Lambda handler behind the {path, method, query, body} envelope. Hono routes; the platform's proxy owns HTTP.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx src/dev-server.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.9.0",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "ajv": "^8.17.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

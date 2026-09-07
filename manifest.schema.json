@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "tabx-app-manifest",
+  "title": "TabX app manifest",
+  "description": "What the platform granted this app. Injected by Architect at generation time; validated by backend/test/manifest.spec.ts. additionalProperties stays true on purpose: an app generated today must remain valid as the platform adds fields (forward compatibility is asserted by a test, not hoped for). Array items are strings for now — their final shape (name vs id vs object) is the Architect spec's decision, and widening a string to an object is a non-breaking schema change under this contract.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["name", "description", "icon", "tools", "connections", "playbooks", "sdk", "env"],
+  "properties": {
+    "name": { "type": "string", "description": "The app's display name." },
+    "description": { "type": "string", "description": "One sentence: what this app is for." },
+    "icon": { "type": "string", "description": "The app's icon (an identifier or URL; the platform decides which)." },
+    "tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The wired tools this app may reach, granted by the workspace."
+    },
+    "connections": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The workspace connections granted to this app (e.g. an Elasticsearch or Redshift connection)."
+    },
+    "playbooks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The workflows this app may trigger through the SDK with an API key."
+    },
+    "sdk": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["capabilities"],
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The SDK capabilities allowed to this app. The vocabulary belongs to the (unbuilt) app-facing SDK; the field is reserved so a clone made today stays valid the day it ships."
+        }
+      }
+    },
+    "env": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The environment variable NAMES the Lambda expects deploy to inject — names only, never values. Must move together with backend/.env.example (constitution Article VI §3)."
+    }
+  }
+}

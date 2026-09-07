@@ -1,0 +1,13 @@
+{
+  "$comment": "The platform contract (constitution Article VIII). This blank template is INJECTED by Architect when the app is generated — read it, never hand-invent it. A capability not listed here is a capability this app does not have. Item shapes inside tools/connections/playbooks are strings for now; the schema tolerates unknown keys so this app stays valid as the platform adds fields.",
+  "name": "",
+  "description": "",
+  "icon": "",
+  "tools": [],
+  "connections": [],
+  "playbooks": [],
+  "sdk": {
+    "capabilities": []
+  },
+  "env": []
+}

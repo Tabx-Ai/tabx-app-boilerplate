@@ -1,0 +1,322 @@
+/* Inter and Roboto, self-hosted. Variable fonts, so one file covers every weight, and no
+   request leaves the origin — the app works offline and there is nothing for a
+   third party to log. The imports come first so their @font-face rules are in
+   place before anything can render text with them.
+
+   BOTH are loaded, not just the chosen one (spec 035). A workspace picks its typeface at
+   runtime from a store, and swapping which stylesheet is imported is not something a built
+   CSS bundle can do — so the cost of the choice is one extra variable font on first load,
+   and the alternative was a CDN request per workspace, which Article VII's reasoning about
+   third parties applies to just as much as it does to a font. `system` uses neither. */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/roboto";
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * TabX theme — ONE palette, light only (spec 010 FR-001).
+ *
+ * Tailwind v4 + shadcn/ui, per the tailwind-v4-shadcn skill's four steps. Each
+ * step fails SILENTLY if skipped, so none of them is optional:
+ *
+ * 1. :root defines the palette AT ROOT LEVEL — never inside @layer base.
+ * 2. @theme inline maps each value to a --color-* token, which is what actually
+ *    generates the utilities (bg-background, text-primary, …). Without this
+ *    step those classes simply do not exist, with no error to say so.
+ * 3. @layer base applies them using bare var(--x) — NEVER hsl(var(--x)), which
+ *    double-wraps and renders everything black or white.
+ * 4. Result: components use semantic classes only. There is no dark: variant
+ *    anywhere in this app, and no second palette to keep in sync.
+ *
+ * NO tailwind.config.ts — v4 ignores it for theming. NO animation plugin:
+ * tw-animate-css and tailwindcss-animate both break the v4 build
+ * (memory/frontend-scaffold), which is why generated shadcn components have
+ * their animate-in/fade-in classes stripped.
+ *
+ * Tailwind is imported WITHOUT the `important` flag. The reference this palette
+ * came from uses `@import "tailwindcss" important` because it is embedded in an
+ * enterprise shell whose unlayered global CSS beats layered utilities; TabX owns
+ * its own document, and !important on every utility would only make its own
+ * overrides harder to reason about.
+ * ------------------------------------------------------------------------ */
+
+/* --- Step 1: the palette ------------------------------------------------- */
+
+:root {
+  /* Everything except buttons keeps this. Buttons are squared in their own
+     component: the owner asked for square BUTTONS, not a square app, so cards,
+     inputs and popovers are untouched. Set this to 0 to square the lot. */
+  --radius: 0.65rem;
+
+  /* Off-white page, not pure white. */
+  --background: #fcfcfc;
+
+  /* The CONTENT surface — one step darker than the frame around it.
+     `--background` is the app's chrome: the rail, the section sidebar, the title
+     bar. This is the area a page's own content sits in, and the step between the
+     two is what makes a card, a table or a dialog read as something laid ON the
+     page rather than a region of it. Two greys, not a shadow: elevation drawn
+     with a shadow needs a light source, and nothing else in this palette has
+     one. Deliberately small — 8 levels — because the cards must be the brightest
+     thing on the screen, not the panel behind them. */
+  --page: #f4f4f5;
+
+  /* The reference forced #434343 onto every text element with a trailing
+     override rule (h1..h6, div, p, span, tr, td, html, body). That rule existed
+     to beat the host shell's resets; here the value simply IS the token, so the
+     palette and the page agree instead of arguing. */
+  --foreground: #434343;
+
+  --card: #fcfcfc;
+  --card-foreground: #434343;
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: #434343;
+
+  /* Near-black primary with near-white text: buttons, active states. */
+  --primary: oklch(0.145 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* Kept from the scaffold: not in the reference, but shadcn's destructive
+     variants have a foreground and some surfaces need a success colour. */
+  --success: oklch(0.596 0.145 163.225);
+  --success-foreground: oklch(0.985 0 0);
+
+  /* Same grey for borders and input outlines. */
+  --border: #dedede;
+  --input: #dedede;
+  --ring: oklch(0.708 0 0);
+
+  /* The sidebar's own surface, added by `shadcn add sidebar` and then brought
+     into this palette: the generator's defaults were a bluish grey from a
+     different base colour, and it also appended a `.dark` block and a
+     `@custom-variant dark` — both removed (FR-001). Values here are the app's
+     own greys, one step off the page background so the sidebar reads as a
+     surface rather than a hole. */
+  --sidebar: oklch(0.97 0 0);
+  --sidebar-foreground: #434343;
+  --sidebar-primary: oklch(0.145 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.94 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: #dedede;
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* The chart series colours (spec 081 FR-009). Five, cycled by the graph
+     adapters, consumed through shadcn's chart config as `var(--chart-N)` —
+     never a hex literal inside a graph component. One light set, like
+     everything above: there is no second palette to keep in sync. Values are
+     shadcn's own light-theme chart ramp, which reads against this palette's
+     off-white surfaces. */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+}
+
+/* --- Step 1b: the home surface (spec 011 FR-019 … FR-024) ----------------
+ *
+ * A SURFACE, not a theme. TabX still has exactly one theme (spec 010 FR-001):
+ * there is no switcher, no persisted preference, nothing a user can toggle, no
+ * `.dark` block and no `@custom-variant`. What this is, is one route that is
+ * made of darker material — the same way a Dialog is a different surface from
+ * the page behind it.
+ *
+ * It works by REDEFINING THE SAME TOKEN NAMES for one subtree. `@theme inline`
+ * above maps `--color-background` to `var(--background)`, so the utilities
+ * Tailwind already generated resolve against whichever value is in scope:
+ * `bg-background` is near-black inside `.home-surface` and #fcfcfc everywhere
+ * else. No utility is duplicated and no variant is introduced.
+ *
+ * The class goes on the marketing layout's root element and NOWHERE ELSE
+ * (FR-024). Putting it on <html> or <body> would follow the user into the
+ * product screens, which is the entire thing this scoping exists to prevent.
+ *
+ * Contrast, measured rather than eyeballed (FR-038): body text #a1a1aa on
+ * #0a0a0a is 7.7:1, and the CTA's #1a0e05 on #e8833a is 6.9:1 — both clear of
+ * the 4.5:1 AA floor.
+ * ------------------------------------------------------------------------ */
+
+.home-surface {
+  /* Near-black page, not pure black: #000 against a bright headline vibrates. */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+
+  --card: #121212;
+  --card-foreground: #fafafa;
+
+  --popover: #121212;
+  --popover-foreground: #fafafa;
+
+  /* Inverted against the light theme: here the high-contrast button is pale. */
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+
+  --secondary: #1c1c1c;
+  --secondary-foreground: #fafafa;
+
+  --muted: #1c1c1c;
+  --muted-foreground: #a1a1aa;
+
+  --accent: #1c1c1c;
+  --accent-foreground: #fafafa;
+
+  --border: #262626;
+  --input: #262626;
+  --ring: #52525b;
+
+  /* The one new token pair, and it is deliberately defined ONLY here (FR-023).
+     `bg-home-accent` therefore resolves to nothing outside this subtree, which
+     makes the scope self-enforcing rather than a rule someone has to remember. */
+  --home-accent: #e8833a;
+  --home-accent-foreground: #1a0e05;
+}
+
+/* --- Step 2: map to Tailwind tokens -------------------------------------- */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* `bg-page`. Mapped here or the utility does not exist — and nothing says so.
+     Defined only in `:root`: `.home-surface` is its own material and never
+     renders a product page, so it has no content surface to name. */
+  --color-page: var(--page);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Spec 011 FR-023. Mapped here so `bg-home-accent` /
+     `text-home-accent-foreground` exist as real utilities; the VALUES live only
+     in `.home-surface`, so the token is generated globally but resolves only
+     there. */
+  --color-home-accent: var(--home-accent);
+  --color-home-accent-foreground: var(--home-accent-foreground);
+
+  /* Spec 081 FR-009. Mapped so `text-chart-1` … exist as real utilities; the
+     graphs themselves reach the values through the chart config's
+     `var(--chart-N)`, so this mapping is for the odd label or legend dot that
+     wants a matching utility class. */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Defined here with its literal value, NOT as `var(--font-sans)` pointing at a
+     :root entry. The colours below need that indirection because a subtree
+     redefines them; a font stack does not — and `--font-sans: var(--font-sans)`
+     is self-referential, so it resolves only while this block happens to come
+     BEFORE the :root one in the output. That is a silent break waiting on a
+     reordering.
+
+     'Inter Variable' is the family the bundled @font-face declares. The platform
+     stack follows so a machine without it still gets its own native UI font, and
+     the emoji families keep an emoji in a name from rendering as a tofu box. */
+  --font-sans:
+    'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', 'Noto Sans', Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+}
+
+/* --- Step 2b: the one keyframe animation ---------------------------------
+ *
+ * A plain `@theme` block, NOT the `@theme inline` one above: `inline` substitutes
+ * a token's value at use site, which is right for colours a subtree redefines and
+ * wrong for an animation nobody redefines.
+ *
+ * This is the second animated thing in the app after `animate-spin` (which is
+ * core Tailwind). It exists because the boot indicator needs an INDETERMINATE
+ * bar: the browser cannot measure how far a reload has got, so the bar must say
+ * "working" without ever claiming a percentage.
+ *
+ * `alternate` is what makes the segment come back rather than jump: with a 1/3
+ * wide segment, translateX(200%) puts its right edge on the track's right edge,
+ * and the reversed half of the cycle carries it home. `ease-in-out` slows it at
+ * both ends, so the turn reads as a turn and not a bounce.
+ */
+@theme {
+  --animate-progress-slide: progress-slide 1.4s ease-in-out infinite alternate;
+
+  @keyframes progress-slide {
+    from {
+      transform: translateX(0%);
+    }
+    to {
+      transform: translateX(200%);
+    }
+  }
+}
+
+/* --- Step 3: base styles, bare var() ------------------------------------- */
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family:
+      ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
