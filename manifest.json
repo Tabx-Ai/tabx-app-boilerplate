@@ -1,5 +1,5 @@
 {
-  "$comment": "The platform contract (constitution Article VIII). This blank template is INJECTED by Architect when the app is generated — read it, never hand-invent it. A capability not listed here is a capability this app does not have. Item shapes inside tools/connections/playbooks are strings for now; the schema tolerates unknown keys so this app stays valid as the platform adds fields.",
+  "$comment": "The platform contract (constitution Article VIII). This blank template is INJECTED by Architect when the app is generated — read it, never hand-invent it. A capability not listed here is a capability this app does not have. Item shapes inside tools/connections/playbooks are strings for now; the schema tolerates unknown keys so this app stays valid as the platform adds fields. `env` is pre-seeded with TABX_URL because the platform sets it on EVERY app (constitution Article XIV); Architect appends whatever else an app was granted.",
   "name": "",
   "description": "",
   "icon": "",
@@ -9,5 +9,7 @@
   "sdk": {
     "capabilities": []
   },
-  "env": []
+  "env": [
+    "TABX_URL"
+  ]
 }

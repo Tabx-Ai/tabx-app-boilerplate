@@ -19,6 +19,14 @@ export const envSchema = z.object({
   APP_NAME: z.string().min(1).default('boilerplate-app'),
   /** Which environment this invocation believes it is in. */
   STAGE: z.enum(['dev', 'prod']).default('dev'),
+  /**
+   * The platform's API base, e.g. `https://tabx.example.com/api` — what the `tabx/` SDK calls
+   * (constitution Article XIV). **Optional on purpose:** most apps never call the platform, and
+   * a required key would make the SDK mandatory for every clone. Absent, the app boots and
+   * answers normally and the SDK's FIRST call fails naming this variable — Article VI §4's
+   * optional-integration shape.
+   */
+  TABX_URL: z.url().optional(),
 });
 
 /** Every key the config module reads — asserted equal to `.env.example` by a test. */
@@ -29,6 +37,10 @@ export interface AppConfig {
   app: {
     name: string;
     stage: 'dev' | 'prod';
+  };
+  /** The platform integration. `url` is `undefined` when this app never calls the platform. */
+  tabx: {
+    url: string | undefined;
   };
 }
 
@@ -61,6 +73,9 @@ export function loadConfig(
     app: {
       name: values.APP_NAME,
       stage: values.STAGE,
+    },
+    tabx: {
+      url: values.TABX_URL,
     },
   };
 }

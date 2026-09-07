@@ -21,6 +21,11 @@
  */
 import { z } from 'zod';
 
+// Type-only: the bindings DECLARE what an invocation carries, and the platform client is one
+// of the two things it carries. No value is imported, so this creates no runtime dependency
+// on the SDK for an app that never calls the platform.
+import type { Tabx } from './tabx/index.js';
+
 /** A thing with an id and a name — a department, a designation, a subsidiary, a role. */
 const namedRefSchema = z.object({
   id: z.string().min(1),
@@ -175,4 +180,17 @@ export function parseContext(raw: unknown): UserContext | null {
  * import each other. Type-only imports are erased and would not break at runtime, but a cycle
  * that exists only in the type graph is still a cycle somebody has to reason about.
  */
-export type AppEnv = { Bindings: { ctx: UserContext } };
+export type AppEnv = {
+  Bindings: {
+    ctx: UserContext;
+    /**
+     * The platform client for THIS invocation (constitution Article XIV). Bound to the
+     * caller's token, so it cannot be a module singleton — a client that outlived the request
+     * would be a credential that outlived it.
+     *
+     * A controller takes it from here and hands it to its repository; only a repository may
+     * import `tabx/`, and the layering test proves it.
+     */
+    tabx: Tabx;
+  };
+};

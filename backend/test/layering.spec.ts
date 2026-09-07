@@ -51,16 +51,18 @@ const code = (relative: string): string =>
 const serviceNames = (): string[] => dirsIn(SRC + 'services');
 
 describe('the homes (Article IX)', () => {
-  it('src/ holds exactly config, external, infrastructure, policies and services', () => {
-    // FIVE since the policy engine added `policies/`. This assertion is AMENDED rather than
-    // duplicated, and `policies` is not carved out with an exclusion list: one assertion, one
-    // answer, or the constitution and the test end up disagreeing about the number.
+  it('src/ holds exactly config, external, infrastructure, policies, services and tabx', () => {
+    // SIX since the SDK added `tabx/` — five when `policies/` arrived, four before that. This
+    // assertion is AMENDED each time rather than duplicated, and no home is carved out with an
+    // exclusion list: one assertion, one answer, or the constitution and the test end up
+    // disagreeing about the number.
     expect(dirsIn(SRC)).toEqual([
       'config',
       'external',
       'infrastructure',
       'policies',
       'services',
+      'tabx',
     ]);
   });
 
@@ -126,7 +128,10 @@ describe('policies/ is a rule library, not a layer (the policy Article)', () => 
 });
 
 describe('the import direction (Article IX §§5-6)', () => {
-  it('no controller and no service imports infrastructure/ or external/', () => {
+  it('no controller and no service imports infrastructure/, external/ or tabx/', () => {
+    // `tabx/` joins the two client homes here rather than getting a rule of its own: it IS a
+    // client home (Article XIV), and the layer allowed to reach a client is the repository —
+    // whoever owns the thing on the other end.
     for (const name of serviceNames()) {
       for (const layer of ['controller.ts', 'service.ts']) {
         const source = code(`services/${name}/${layer}`);
@@ -136,6 +141,7 @@ describe('the import direction (Article IX §§5-6)', () => {
         expect(source, `${name}/${layer} imports external/`).not.toMatch(
           /from\s+['"][^'"]*external/,
         );
+        expect(source, `${name}/${layer} imports tabx/`).not.toMatch(/from\s+['"][^'"]*tabx\//);
       }
     }
   });
@@ -147,4 +153,45 @@ describe('the import direction (Article IX §§5-6)', () => {
       expect(source, `${name}/service.ts reads process.env`).not.toMatch(/process\.env/);
     }
   });
+});
+
+describe('tabx/ is a client home, and the token has ONE reader (Article XIV)', () => {
+  it('imports config, its own files and zod — no service, no repository, no router', () => {
+    for (const file of filesIn(`${SRC}tabx`)) {
+      const source = code(`tabx/${file}`);
+      for (const forbidden of ['services/', 'infrastructure/', 'external/', 'policies/']) {
+        expect(source, `tabx/${file} imports ${forbidden}`).not.toMatch(
+          new RegExp(`from\\s+['"][^'"]*${forbidden}`),
+        );
+      }
+      expect(source, `tabx/${file} imports hono`).not.toMatch(/from\s+['"]hono/);
+      expect(source, `tabx/${file} reads process.env`).not.toMatch(/process\.env/);
+    }
+  });
+
+  it('the envelope token is read in exactly one module — the SDK client', () => {
+    // The rule that keeps a credential findable is ONE READER. "The SDK handles the token" is
+    // not greppable; this is. Watched failing by reading `.token` in handler.ts.
+    const readers: string[] = [];
+    const walk = (dir: string, prefix: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) walk(`${dir}${entry.name}/`, `${prefix}${entry.name}/`);
+        else if (entry.name.endsWith('.ts')) {
+          // The DECLARATION in envelope.ts is not a read, and neither is a type annotation.
+          const source = code(`${prefix}${entry.name}`).replace(/token\?*\s*:/g, '');
+          if (/\.token\b/.test(source)) readers.push(`${prefix}${entry.name}`);
+        }
+      }
+    };
+    walk(SRC, '');
+    expect(readers).toEqual(['tabx/client.ts']);
+  });
+
+  it('UserContext carries no token — identity and credential are two objects', () => {
+    // A service returning its context is ordinary. A credential spread onto a wire shape is
+    // the accident this prevents.
+    const source = code('context.ts');
+    expect(source).not.toMatch(/\btoken\b/);
+  });
+
 });

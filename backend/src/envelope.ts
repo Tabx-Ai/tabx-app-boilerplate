@@ -17,6 +17,18 @@ export const requestEnvelopeSchema = z.object({
   body: z.unknown().nullable().default(null),
   /** The proxy-injected identity. Parsed and enforced by context.ts, never here. */
   context: z.unknown().optional(),
+  /**
+   * The caller's platform session token, injected by the proxy (the platform's spec 109).
+   *
+   * **This is a credential.** Never log this envelope, and never log this field. It is read in
+   * exactly ONE place in this app — `tabx/client.ts` — and it is deliberately NOT put on
+   * `UserContext`, so a service returning its context cannot leak it.
+   *
+   * Optional here, and required by nothing: an invocation from an older proxy, or a local
+   * harness, simply carries no token, and every route that does not call the platform works
+   * exactly as before. The SDK is what fails, at its first call.
+   */
+  token: z.string().min(1).optional(),
 });
 
 export type RequestEnvelope = z.infer<typeof requestEnvelopeSchema>;

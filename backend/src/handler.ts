@@ -3,9 +3,34 @@
  * Envelope in, typed envelope out, and NOTHING throws past this function: a Lambda that
  * throws is retried by some invokers, which duplicates whatever side effect half-ran.
  */
-import { parseContext } from './context.js';
-import { errorBody, requestEnvelopeSchema, type ResponseEnvelope } from './envelope.js';
+import { parseContext, type AppEnv, type UserContext } from './context.js';
+import {
+  errorBody,
+  requestEnvelopeSchema,
+  type RequestEnvelope,
+  type ResponseEnvelope,
+} from './envelope.js';
 import { app } from './router.js';
+import { tabxForInvocation } from './tabx/index.js';
+
+/**
+ * What one invocation carries into the router.
+ *
+ * Exported so a test can assert the wiring **behaviourally** — reading `handler.ts` as text to
+ * check that a binding is passed is the kind of assertion that passes while asserting nothing.
+ *
+ * The whole envelope goes to the SDK, not `envelope.token`: the token has exactly one reader in
+ * this app (`tabx/client.ts`), and picking the field out here would make that two.
+ */
+export function bindingsFor(envelope: RequestEnvelope, ctx: UserContext): AppEnv['Bindings'] {
+  return {
+    ctx,
+    // An invocation with no token still gets a client — one whose first call fails, naming the
+    // problem. The alternative, an optional binding, would push a null check into every
+    // repository that uses it for a case a deployed app does not have.
+    tabx: tabxForInvocation(envelope),
+  };
+}
 
 export async function handler(event: unknown): Promise<ResponseEnvelope> {
   try {
@@ -45,7 +70,7 @@ export async function handler(event: unknown): Promise<ResponseEnvelope> {
         headers: body === null ? undefined : { 'content-type': 'application/json' },
         body: body === null ? undefined : JSON.stringify(body),
       },
-      { ctx },
+      bindingsFor(parsed.data, ctx),
     );
 
     const text = await response.text();

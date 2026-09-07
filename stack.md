@@ -24,8 +24,10 @@ slug in the SPA's hostname is what names the backend's.
 
 ## backend/ — where the code goes
 
-`backend/src` has **four homes** beside the entry files, and the set is fixed (constitution
-Article IX) so the next service is a copy of the last:
+`backend/src` has **six homes** beside the entry files, and the set is fixed (constitution
+Article IX) so the next service is a copy of the last. (This sentence said *four* while the
+table below already listed five — nothing asserts prose, so the number here is only as current
+as the last person who edited it. The **layering test** is the authority on the set.)
 
 | Folder | Holds | May import |
 | --- | --- | --- |
@@ -34,6 +36,7 @@ Article IX) so the next service is a copy of the last:
 | `infrastructure/` | clients for **persistence**: a database, a cache, object storage | `config/` |
 | `external/` | clients for **third-party APIs** | `config/` |
 | `policies/` | **every access rule, and the check** — predicates over the injected identity | the context **type**, and `config/` |
+| `tabx/` | the client for **the platform this app lives inside** — contract, client, interface | `config/`, and the envelope's token |
 
 - **The `infrastructure` / `external` split is by who owns the thing, not by protocol.** A
   database client and an object-storage client are both `infrastructure/`; a vendor's REST
@@ -44,6 +47,14 @@ Article IX) so the next service is a copy of the last:
   rule is invisible at runtime: a service that imports a database still answers its route.
 - **Policies are code, in one folder**, and `RoleGuard` on the frontend is **advice about what
   to render** — the server checks every guarded operation again. See constitution Article XII.
+- **The `tabx` SDK is PROVIDED and used by nothing** (Article XIV): six read-only lookups —
+  the caller, one page of members, one member, and the three organization lists. It is a sixth
+  home rather than `external/` because the platform is not a third party to an app. Three
+  things travel with it: the credential is the **caller's own token**, so the app reaches
+  exactly what they reach and **the six methods bound the surface, not the credential**; the
+  token has **one reader** (`tabx/client.ts`) and is never on `UserContext`; and **logging the
+  envelope is now a credential leak**, where it used to be merely noisy. `TABX_URL` is
+  optional — the SDK's first call is what fails without it, not the boot.
 - **A mini rail and a generic section sidebar are PROVIDED and used by nothing** (Article XIII).
   An app that needs navigation adopts them; one that does not renders neither. They are built
   from the design tokens rather than composing the vendored sidebar primitive, which would

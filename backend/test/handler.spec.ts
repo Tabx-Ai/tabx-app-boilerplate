@@ -4,9 +4,10 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { handler } from '../src/handler.js';
+import { bindingsFor, handler } from '../src/handler.js';
 import { rawContext } from './context.fixture.js';
 import { app } from '../src/router.js';
+import { parseContext } from '../src/context.js';
 
 // The RAW shape the platform injects — the parser refuses anything else.
 const ctx = rawContext;
@@ -86,5 +87,31 @@ describe('errors never escape the handler (constitution Article IV §3)', () => 
     expect(answer.body).toEqual({
       error: { code: 'INTERNAL', message: 'The service failed; the failure is logged.' },
     });
+  });
+});
+
+describe('what one invocation carries into the router (spec 012)', () => {
+  it('binds the identity AND a platform client bound to this invocation', () => {
+    // Asserted on the built bindings rather than by reading handler.ts as text: a structural
+    // check that a binding is "passed" is the kind that passes while asserting nothing.
+    const ctxObject = parseContext(ctx);
+    expect(ctxObject).not.toBeNull();
+    const bindings = bindingsFor(envelope({ token: 'the-session-token' }) as never, ctxObject!);
+    expect(bindings.ctx.userId).toBe(rawContext.user.id);
+    expect(typeof bindings.tabx.me).toBe('function');
+    expect(Object.keys(bindings).sort()).toEqual(['ctx', 'tabx']);
+  });
+
+  it('an invocation with NO token still answers a route that does not call the platform', async () => {
+    // The optional-integration promise, at the seam: an app that never uses the SDK must not
+    // need a token or a TABX_URL to work.
+    const answer = await handler(envelope({ query: { name: 'Grace' } }));
+    expect(answer.status).toBe(200);
+  });
+
+  it('the token never reaches the identity object', async () => {
+    const ctxObject = parseContext(ctx);
+    const bindings = bindingsFor(envelope({ token: 'super-secret' }) as never, ctxObject!);
+    expect(JSON.stringify(bindings.ctx)).not.toContain('super-secret');
   });
 });

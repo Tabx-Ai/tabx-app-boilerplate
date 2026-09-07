@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 2.4.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 2.5.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -307,6 +307,45 @@ service modules; this Article says what a service module *is*.
    guard by its app; a navigation component that decided access would be a second enforcement
    point, and the server is the only one that counts.
 
+## Article XIV — The Platform SDK (`backend/src/tabx/`)
+
+1. **`tabx/` is the client for the platform this app lives inside**, and it is the **sixth
+   home** under `backend/src` (Article IX). It holds three things and no more: a `contract`
+   (the response schemas), a `client` (the one network call), and an `interface` (the typed
+   surface).
+2. **Why it is not `external/`.** Article IX splits the client homes by **who owns the thing**.
+   A payment provider is `external/`; a database is `infrastructure/`. The platform is neither:
+   it is the workspace this app lives inside, it authenticated this app's caller, and this app
+   exists because the platform generated it.
+3. **Only a `repository.ts` may import it** — the same rule Article IX §6 fixes for the other
+   two client homes, enforced by the same test.
+4. **It is READ-ONLY.** Six methods: the caller, one page of members, one member, and the three
+   organization lists. **No writes, and no generic `request()`** — a seventh method is a
+   deliberate edit to `interface.ts` that a test notices.
+5. **The credential is the CALLER'S OWN session token**, injected into the invocation envelope
+   by the platform's proxy. Two consequences, and the second is the one that gets forgotten:
+   - **This app reaches exactly what that person reaches, and nothing more.** The platform's own
+     guards judge every call.
+   - **The six methods are a convenience, not a fence.** Any code here could call anything that
+     person could. **The SDK limits what is easy, not what is possible** — so "the SDK does not
+     expose it" is never the reason an app may not do something.
+6. **The token has exactly ONE reader** — `tabx/client.ts` — and it is **never on
+   `UserContext`**. Identity and credential are two objects, because a service returning its
+   context is ordinary and a credential riding along on it is a leak. A grep proves the count.
+7. **Never log the envelope, and never log the token.** It used to be merely noisy; it is now a
+   credential leak. The invocation payload is already logged by the cloud provider — this app
+   must not add a second copy.
+8. **Prefer the injected context over `me()`.** Identity arrives free with every invocation
+   (Article V). `me()` costs a network call and can fail; use it for fields the context does not
+   carry, or to confirm a session is still live.
+9. **`TABX_URL` is optional** (Article VI §3's three files, all the same). An app that never
+   calls the platform boots and answers with it unset; the SDK's **first call** is what fails,
+   naming the variable.
+10. **The name is deliberate, and it is the one exemption to the naming rule.** This template
+    carries no reference to the platform anywhere else — but an SDK called `tabx` is what tells
+    an app which platform it can call. The exemption covers the folder, its identifiers and
+    `TABX_URL`, and nothing beyond them.
+
 ## Governance
 
 1. **Amendments are versioned (semver)** — MAJOR: a principle removed or redefined;
@@ -319,6 +358,26 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **2.5.0** (2026-09-07) — **A limited client for the platform.** Adds **Article XIV**.
+
+  Why: an app was told **who** was calling and nothing else, so a screen needing the list of
+  departments or a colleague's details had no way to ask — even though the platform already
+  holds all of it. The invocation envelope now carries the caller's token, so this app can ask,
+  **as that person**.
+
+  **What §5 says, and it is the clause worth reading twice.** The credential is the person's own
+  session token. The six methods bound the *surface*, not the *credential*: any code here could
+  call anything they could. **The SDK limits what is easy, not what is possible** — so "the SDK
+  does not expose it" is never a reason an app may not do something, and an app that wants a
+  fence needs a scoped token, which the platform does not yet mint.
+
+  **What is given up, stated because an entry that reads as pure gain is a sales pitch.** A
+  credential now travels inside every invocation payload, which the cloud provider logs; two
+  rules are what keep it contained inside this app (§§6-7), and both are greppable rather than
+  remembered. And a client nobody calls **will rot** — nothing in this template uses it, so its
+  tests are the substitute for use, which is strictly weaker. §10 also spends the template's
+  one naming exemption: this is the single place the platform's name appears on purpose.
 
 - **2.4.0** (2026-09-07) — **A navigation shape, provided and not imposed.** Adds
   **Article XIII**.

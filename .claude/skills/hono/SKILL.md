@@ -34,10 +34,11 @@ The answer is always `{ status, body }`. **Both directions are typed** — see
 - Query values are **strings**. A service that needs a number uses `z.coerce.number()` in its
   own schema.
 
-## Where code goes: four homes
+## Where code goes: six homes
 
-`src/` has exactly four folders beside the entry files, and the set is asserted by a test
-(constitution Article IX):
+`src/` has exactly six folders beside the entry files, and the set is asserted by a test
+(constitution Articles IX and XIV). **The count in this heading has been wrong before** — the
+test is the authority; if it disagrees with this table, the test is right.
 
 | Folder | Holds | May import |
 | --- | --- | --- |
@@ -46,11 +47,20 @@ The answer is always `{ status, body }`. **Both directions are typed** — see
 | `infrastructure/` | clients for **persistence**: a database, a cache, object storage | `config/` |
 | `external/` | clients for **third-party APIs** | `config/` |
 | `policies/` | **every access rule, and the check** | the context **type**, and `config/` |
+| `tabx/` | the client for **the platform this app lives inside** | `config/`, and the envelope's token |
 
-**The split between the two client homes is by WHO OWNS THE THING, not by protocol.** A
+**The split between the client homes is by WHO OWNS THE THING, not by protocol.** A
 database client and an object-storage client are both `infrastructure/` though one speaks TCP
 and the other HTTPS; a payment provider's client is `external/` though it is the same HTTPS.
-*"It makes an HTTP call"* is the wrong test, and it is the one you will reach for.
+*"It makes an HTTP call"* is the wrong test, and it is the one you will reach for. `tabx/` is
+the third client home and gets its own: the platform is **neither** a third party nor this
+app's persistence — it is the workspace the app lives inside, and it authenticated the caller.
+
+**`tabx/` follows the repository-only rule too** (Article XIV): a controller or a service
+importing it fails the layering test, exactly as for the other two. Two more rules travel with
+it, both asserted: the caller's **token has one reader** (`tabx/client.ts`) and is never on
+`UserContext`, and the SDK is **read-only — six methods, no `request()`**. The credential is the
+caller's own, so **the SDK limits what is easy, not what is possible**.
 
 ## Adding a service
 
@@ -64,7 +74,9 @@ a named, empty seam. A test asserts their presence.
    `(input, ctx, repo)`. It imports **no router and no client**, and never reads the
    environment. A test asserts all three.
 3. **`src/services/<name>/repository.ts`** — the **only** file in the service that may import
-   `infrastructure/` or `external/`. It returns domain values, never a driver's row type.
+   `infrastructure/`, `external/` **or `tabx/`**. It returns domain values, never a driver's
+   row type. A repository that needs the platform client takes it as a **parameter**
+   (`c.env.tabx`), because that client is bound to this invocation's token.
 4. **One line in `src/router.ts`**: `app.route('/<name>', <name>Controller)`.
    **`router.ts` is a mount list and declares no routes of its own — a `.get(` or `.post(` in
    that file FAILS A TEST.**
