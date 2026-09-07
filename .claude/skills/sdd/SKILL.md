@@ -17,7 +17,7 @@ from it. **Never write code from this skill.**
 
 1. **Read `constitution.md` in full** this session — the runtime constraints decide more of a
    design than the ask does.
-2. **Read the relevant `memory/` files and the existing specs** — `specs/001-boilerplate-baseline/`
+2. **Read the relevant `memory/` files and the existing specs** — `specs/`
    is the worked example of the format, and later specs record what already exists.
 3. **Read `manifest.json`** — a capability not listed there is a capability this app does not
    have. A design that needs a new tool, connection, or playbook asks the platform for it; it

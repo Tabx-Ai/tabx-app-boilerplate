@@ -71,7 +71,7 @@ change without touching the app:
 `CLAUDE.md` / `AGENTS.md` are the working instructions, and `constitution.md` is the law they
 answer to. The workflow is spec-first: five files per ask (`spec` → `plan` → `tasks` → `eval` →
 `summary`) under `specs/NNN-slug/`, then implementation one task at a time.
-`specs/001-boilerplate-baseline/` is the worked example.
+`specs/` holds this app's own record, one folder per change; `001-stack` is the earliest and `009-skills-and-memory` the latest.
 
 **Never commit a secret.** Credentials reach a deployed app by env injection into the Lambda,
 never from this tree.

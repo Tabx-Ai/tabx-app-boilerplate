@@ -26,7 +26,7 @@ assumptions out loud.
   `summary.md` — under `specs/NNN-slug/`. Trivial mechanical edits are exempt.
 - **`/implement` builds** — one task at a time, verify, tick only that checkbox, close out on
   `eval.md`. The eval is the only gate.
-- `specs/001-boilerplate-baseline/` is the worked example of the format.
+- `specs/` holds this app's own record — one folder per change, five files each. `001-stack` is the worked example of the format; read the most recent ones before touching an area they cover.
 
 ## Layout
 
