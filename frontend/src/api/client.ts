@@ -2,10 +2,15 @@
  * The one place the frontend performs HTTP — and the transport half of the platform seam
  * (memory/proxy-context.md; the backend half is backend/src/context.ts).
  *
- * Every call is ONE shape: a POST to the configured invoke URL whose body is the backend's
- * request envelope `{ path, method, query, body }`, with the boot-read pass token attached
- * as a bearer header for the PROXY to validate. The app holds no other credential and no
- * other route.
+ * Every call is an ORDINARY REST REQUEST — a real method and a real path against the app's own
+ * API origin, with the boot-read pass token attached as a bearer header for the platform's
+ * proxy to validate. The app holds no other credential.
+ *
+ * **The client does not build an envelope.** The platform's proxy constructs
+ * `{ path, method, query, body }` from the request it receives, so sending a pre-built one
+ * would arrive as `path: '/request'`, `method: 'POST'` — the envelope for the wrong request.
+ * The local dev harness wraps a plain request the same way, which is what lets one transport
+ * serve both environments.
  *
  * - Every failure — HTTP, network, parse, or the platform's own refusal — leaves here as an
  *   `ApiError`; no caller ever sees a `Response`.
@@ -39,9 +44,9 @@ export class NoTokenError extends ApiError {
   }
 }
 
-export interface InvokeOptions<T> {
+export interface RequestOptions<T> {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  /** Query values are strings — they travel as URL-shaped data in the envelope. */
+  /** Query values are strings — they become the request's query string. */
   query?: Record<string, string>;
   /** JSON-serialisable request body. */
   body?: unknown;
@@ -54,26 +59,27 @@ export interface InvokeOptions<T> {
 }
 
 /** Call a backend service through the platform proxy. */
-export async function invoke<T = unknown>(path: string, options: InvokeOptions<T> = {}): Promise<T> {
+export async function request<T = unknown>(path: string, options: RequestOptions<T> = {}): Promise<T> {
   const token = getToken();
   if (token === null) throw new NoTokenError();
 
-  const envelope = {
-    path,
-    method: options.method ?? 'GET',
-    query: options.query ?? {},
-    body: options.body ?? null,
-  };
+  const method = options.method ?? 'GET';
+  const query = new URLSearchParams(options.query ?? {}).toString();
+  const url = `${config.apiBaseUrl}${path}${query.length > 0 ? `?${query}` : ''}`;
+
+  // A body only where one belongs: sending `content-type` on a GET adds a preflight for
+  // nothing, and the proxy reads an empty body as `null` either way.
+  const hasBody = options.body !== undefined && method !== 'GET';
 
   let response: Response;
   try {
-    response = await fetch(config.invokeUrl, {
-      method: 'POST',
+    response = await fetch(url, {
+      method,
       headers: {
-        'content-type': 'application/json',
         authorization: `Bearer ${token}`,
+        ...(hasBody ? { 'content-type': 'application/json' } : {}),
       },
-      body: JSON.stringify(envelope),
+      ...(hasBody ? { body: JSON.stringify(options.body) } : {}),
     });
   } catch (err) {
     throw new ApiError(0, `The platform could not be reached: ${String(err)}`);

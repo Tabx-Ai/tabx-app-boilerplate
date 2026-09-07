@@ -30,13 +30,20 @@ export default defineConfig({
   },
 
   server: {
-    // Local dev only: the client's envelope calls go to the configured proxy path
-    // (default /invoke), which Vite forwards to the backend's dev harness. Deployed,
-    // the platform's proxy owns this path and this block is never in play.
+    // LOCAL DEV ONLY, and it is what lets one transport serve both environments.
+    //
+    // Deployed, the client's base is `https://<slug>.api.<apex>` and its calls go straight
+    // to the platform's proxy. Locally the base is `''`, so a call to `/hello` lands here —
+    // and Vite forwards it to the dev harness with the prefix STRIPPED, because the harness
+    // serves the app's own paths (`/hello`), not prefixed ones.
+    //
+    // So `controller.ts` calls the same path in both places; only the base in front of it
+    // differs, and there is no conditional in the client.
     proxy: {
-      '/invoke': {
+      '/api': {
         target: 'http://localhost:8787',
         changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ''),
       },
     },
   },

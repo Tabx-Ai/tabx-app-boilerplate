@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 1.1.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 1.2.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -166,6 +166,36 @@ of the last rather than an invention.
 **This sharpens Article IV §5, it does not replace it.** §5 says the router dispatches to
 service modules; this Article says what a service module *is*.
 
+## Article X — The Frontend Knows Its Backend
+
+1. **The API origin is derived from the page's own hostname.** An app served from
+   `<slug>.apps.<apex>` calls `https://<slug>.api.<apex>` — the same slug, one label
+   different. The frontend is never told its API address, so one build runs in every
+   environment the platform is deployed under.
+2. **Anywhere else, the base is a relative prefix** which the dev server forwards to the local
+   harness. It is a **prefix, not an empty string**: with an empty base a call would be
+   answered by the SPA's own dev server, which serves the page shell for any unmatched path,
+   and the client would parse HTML as JSON.
+3. **A generated app is CROSS-ORIGIN by construction.** Its SPA and its backend are two
+   origins, so every call needs the platform edge's permission headers and a browser sends a
+   preflight before anything carrying an `Authorization` header. This is a dependency on the
+   platform, not something the app can fix.
+4. **Every call is an ordinary request** — a real method, a real path, the pass token on the
+   `Authorization` header. **The app builds no envelope**: the platform's proxy constructs one
+   from the request it receives, so a pre-built envelope would describe the wrong request.
+5. **Exactly one file performs a network call.** Every failure leaves it as one error type
+   carrying a status, where `0` means the server was never reached; only JSON is parsed; and a
+   2xx of the wrong shape is an error, not data.
+6. **Each backend domain gets a frontend folder with exactly two files:**
+   - **`path.ts`** — the paths that domain serves. **No path string exists anywhere else.**
+   - **`controller.ts`** — one typed function per call, parsing its response against a schema.
+7. **A component calls a controller, never the client, and never writes a path.** The layering
+   is component → hook → controller → client → config, and it points one way.
+8. **The two projects agree about paths BY CONVENTION**, because there is deliberately no
+   shared package (`stack.md`: the template must build from a bare clone). Each side's tests
+   pin its own half. That is a real cost, accepted knowingly — the alternative breaks the
+   standalone-build rule that makes this template cloneable at all.
+
 ## Governance
 
 1. **Amendments are versioned (semver)** — MAJOR: a principle removed or redefined;
@@ -178,6 +208,31 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **1.2.0** (2026-09-07) — **The frontend works out where its backend is, and stops building
+  envelopes.** Adds **Article X**, appended so nothing renumbers.
+
+  Why: the shipped client POSTed a hand-built `{path, method, query, body}` envelope to a
+  relative `/invoke` — a path that existed only because the local dev harness answered there.
+  **Nothing in it could reach a deployed app**, whose backend is on a different hostname
+  entirely. Worse, the platform's proxy builds that envelope itself from an ordinary request,
+  so sending a pre-built one would have arrived describing `POST /invoke` rather than the call
+  the app meant. The fix is for the frontend to read its API origin off its own hostname and
+  send a real request.
+
+  Paths get a file of their own per domain, because a generated app's paths are the contract
+  between its two projects **and** what the platform's proxy sees on the wire — so *"where is
+  this route declared"* needs a one-file answer on each side.
+
+  **What is given up, stated because an entry that reads as pure gain is a sales pitch.** A
+  generated app is now **cross-origin by construction**: it works only while the platform's
+  edge sends the permission headers, which is a dependency the app cannot test alone and
+  cannot fix. And the two projects agree about paths **by convention** rather than by a shared
+  type, because the standalone-build rule forbids a shared package — each side's tests pin its
+  own half, and a path renamed on one side and not the other is a runtime 404 rather than a
+  compile error.
+
+  MINOR: a new Article; nothing removed or redefined. Owner's decision.
 
 - **1.1.0** (2026-09-07) — **`backend/src` has four homes, and a service has three files.**
   Adds **Article IX**, appended so nothing renumbers.

@@ -1,29 +1,23 @@
 /**
- * THROWAWAY SAMPLE PAGE — it proves shell + client + backend in one screen: the page
- * furniture renders, one call goes through src/api/client.ts (the envelope + the pass
- * token) to the backend's `hello` service, and the answer lands on screen. The first real
- * spec of this app should replace it, the way the backend's sample service is replaced.
+ * THROWAWAY SAMPLE PAGE — it proves shell + controller + backend in one screen: the page
+ * furniture renders, one call goes out through the `hello` domain's controller, and the
+ * answer lands on screen. The first real spec of this app should replace it, the way the
+ * backend's sample service is replaced.
+ *
+ * **Note what this page does NOT contain**: no path string, no `fetch`, no schema, and no
+ * import of the client (spec 103 FR-011). It calls `getHello()` and renders the result.
  */
 import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
 
-import { invoke } from '@/api/client';
+import { getHello } from '@/api/hello/controller';
 import PageHeader from '@/components/page/page-header';
 import PageWrapper from '@/components/page/page-wrapper';
 import Loader from '@/components/page/loader';
 
-// The sample's contract, declared where it is consumed (memory/layout.md: there is no
-// shared package — a real app's spec decides its contract-sharing story).
-const helloResponse = z.object({
-  message: z.string(),
-  workspaceId: z.string(),
-  app: z.string(),
-});
-
 export default function Page() {
   const hello = useQuery({
     queryKey: ['hello'],
-    queryFn: () => invoke('/hello', { schema: helloResponse }),
+    queryFn: () => getHello(),
   });
 
   return (

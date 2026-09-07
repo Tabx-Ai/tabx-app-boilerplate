@@ -70,6 +70,25 @@ Article IX) so the next service is a copy of the last:
 - **Anything holding state across invocations** (in-process caches that correctness depends on,
   schedulers, long-lived connections assumed alive) — Article IV §2.
 
+## frontend/ — how it reaches its backend
+
+The SPA **derives** its API origin from its own hostname: served at `<slug>.apps.<apex>`, it
+calls `https://<slug>.api.<apex>`. Anywhere else — `localhost` above all — the base is the
+relative prefix `/api`, which the dev server forwards to the local harness with the prefix
+stripped. One transport in both environments, no build-time switch.
+
+- **`VITE_API_BASE_URL`** overrides the derivation, for pointing a locally-run frontend at a
+  deployed proxy. It goes in this project's own `.env.local`. (It replaced `VITE_INVOKE_URL`,
+  which was declared in `vite-env.d.ts` under one name and read under another — the exact typo
+  class that Vite's `any` index signature on `ImportMetaEnv` makes invisible.)
+- **Ordinary requests, not envelopes.** The platform's proxy builds the invocation envelope
+  from the request it receives; the client sends a real method and path with the pass token on
+  the `Authorization` header.
+- **One `fetch` in the whole app**, in `src/api/client.ts`. A test asserts it, using the
+  word-boundary form — a plain `fetch(` search matches `refetch(`.
+- **Per domain, two files**: `src/api/<domain>/path.ts` (every path that domain serves, and
+  nowhere else) and `controller.ts` (the typed calls). Components call controllers.
+
 ## frontend/ — Vite + React SPA
 
 **Ships:**

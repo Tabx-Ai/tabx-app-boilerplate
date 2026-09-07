@@ -25,7 +25,7 @@ afterEach(() => {
 });
 
 describe('the sample page', () => {
-  it('calls hello through the client and renders the answer', async () => {
+  it('calls hello through its controller and renders the answer', async () => {
     fetchSpy.mockResolvedValueOnce(
       new Response(
         JSON.stringify({ message: 'Hello, Dev.', workspaceId: 'w-dev', app: 'boilerplate-app' }),
@@ -41,11 +41,12 @@ describe('the sample page', () => {
 
     expect(await screen.findByText(/Hello, Dev\./)).toBeInTheDocument();
 
-    // The call went out as the envelope, with the token.
+    // The call went out as an ordinary GET to the domain's own path, with the token.
     const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('/invoke');
+    expect(url).toBe('/api/hello');
+    expect(init.method).toBe('GET');
     expect((init.headers as Record<string, string>).authorization).toBe('Bearer tok-page');
-    expect(JSON.parse(init.body as string).path).toBe('/hello');
+    expect(init.body).toBeUndefined();
   });
 
   it('renders the failure as a sentence when the platform refuses', async () => {
