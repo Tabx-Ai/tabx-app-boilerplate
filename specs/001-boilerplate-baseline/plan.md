@@ -24,3 +24,10 @@ identity or raw transport. That boundary is the plan's one load-bearing decision
 - Article VI: config parsed once; `.env.example` ↔ `manifest.env` together ✓
 - Article VII: no secret committed ✓
 - Article VIII: manifest validated against its schema by a test ✓
+
+## Reference — the backend's layout
+
+`references/backend-layout.md` is the worked shape a service copies: the four homes under
+`backend/src`, the table of who may import what, the two rules most likely to be got wrong,
+and a service written out in full. **Read it before adding a service.** The law it restates is
+constitution Article IX.

@@ -22,6 +22,26 @@ needs the platform edge's permission headers, and a browser will send a prefligh
 anything carrying an `Authorization` header. Nothing about this is configurable per app — the
 slug in the SPA's hostname is what names the backend's.
 
+## backend/ — where the code goes
+
+`backend/src` has **four homes** beside the entry files, and the set is fixed (constitution
+Article IX) so the next service is a copy of the last:
+
+| Folder | Holds | May import |
+| --- | --- | --- |
+| `config/` | environment parsing, once, typed | nothing of the app's |
+| `services/<name>/` | one domain: `controller.ts` + `service.ts` + `repository.ts`, **always all three** | `config/`; and — **repository only** — `infrastructure/`, `external/` |
+| `infrastructure/` | clients for **persistence**: a database, a cache, object storage | `config/` |
+| `external/` | clients for **third-party APIs** | `config/` |
+
+- **The `infrastructure` / `external` split is by who owns the thing, not by protocol.** A
+  database client and an object-storage client are both `infrastructure/`; a vendor's REST
+  client is `external/`. *"It makes an HTTP call"* is the wrong test.
+- **The controller owns its routes**; `router.ts` is a mount list. Adding a service touches
+  `router.ts` and nothing else shared — measured: **two lines**, the mount and its import.
+- **Only a repository may reach a client.** A test reads the sources to prove it, because the
+  rule is invisible at runtime: a service that imports a database still answers its route.
+
 ## backend/ — Hono on AWS Lambda
 
 **Ships:**

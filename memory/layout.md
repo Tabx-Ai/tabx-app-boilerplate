@@ -24,3 +24,41 @@
   demand `--legacy-peer-deps`. If that happens, add the package with `--legacy-peer-deps` once
   and commit the lockfile — the resolution travels with the repo; never delete the lockfile to
   "fix" an install.
+
+## Inside `backend/src` — four homes, and the rules that are invisible at runtime
+
+Constitution Article IX fixes the shape; these are the parts that bite.
+
+- **The `infrastructure/` vs `external/` split is by WHO OWNS THE THING, not by protocol.** A
+  database client and an object-storage client are both `infrastructure/` though one speaks TCP
+  and the other HTTPS; a vendor's REST client is `external/` though it is the same HTTPS.
+  *"It makes an HTTP call"* is the wrong test and it is the one that gets reached for. Both
+  folders state the rule in their own header, because the mistake is made in whichever file is
+  open.
+- **Only a repository may import either.** A controller or service that does is a defect — and
+  it is **invisible at runtime**: a service importing a database still answers its route
+  perfectly. So the enforcement is a test that reads the sources (`test/layering.spec.ts`),
+  which is the only observable there is.
+- **Every service ships `repository.ts`, even persisting nothing.** The cost is a pass-through
+  file; what it buys is that the first read has exactly one legal home. The triad test asserts
+  **presence**, never that a client is used — otherwise the rule would be untestable for the
+  services that need it least.
+- **A service needing another domain's data calls that domain's SERVICE, never its
+  repository.** The repository is the domain's private seam.
+
+## Two traps this layout produced, both paid for once
+
+- **A source-reading test finds the file's OWN COMMENTS.** `service.ts` documents that it must
+  not read `process.env`; the import assertion found that sentence and failed. Every import
+  assertion now strips comments first, and the helper says so in a comment of its own. Same
+  family as a `dark:` search matching prose, or `fetch(` matching **`refetch(`**.
+- **`AppEnv` belongs in `context.ts`, not `router.ts`.** A controller needs that type and
+  `router.ts` imports every controller, so declaring it there makes the two import each other.
+  Type-only imports are erased, so nothing breaks at runtime — which is exactly why it would
+  have survived unnoticed.
+
+## What adding a service actually costs
+
+**Two lines in `router.ts`** — the mount and its import — and nothing else outside the
+service's own two folders. Measured by adding a throwaway service and diffing, not asserted:
+the spec claimed one line, and the import is the second.
