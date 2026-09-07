@@ -1,6 +1,6 @@
 ---
 name: shadcn
-description: "| Tailwind CSS v4 + shadcn/ui patterns for this app's frontend/ (already set up — the ui/ set is vendored). Use when: initializing React projects with Tailwind v4, setting up shadcn/ui, implementing dark mode, debugging CSS variable issues, fixing theme switching, migrating from Tailwind v3, or encountering color/theming problems. Covers: @theme inline pattern, CSS variable architecture, dark mode with ThemeProvider, component composition, vite.config setup, common v4 gotchas, and production-tested patterns."
+description: "| Tailwind CSS v4 + shadcn/ui patterns for this app's frontend/ (already set up — the ui/ set is vendored). Use when: initializing React projects with Tailwind v4, setting up shadcn/ui, debugging CSS variable issues, migrating from Tailwind v3, or encountering colour/theming problems. Covers: @theme inline pattern, CSS variable architecture, component composition, vite.config setup, common v4 gotchas, and production-tested patterns. This app has ONE LIGHT PALETTE and no dark mode."
 
 metadata:
   keywords:
@@ -8,7 +8,6 @@ metadata:
     - shadcn/ui
     - "@tailwindcss/vite"
     - "@theme inline"
-    - dark mode
     - CSS variables
     - hsl() wrapper
     - components.json
@@ -36,7 +35,7 @@ license: MIT
 1. [Before You Start](#-before-you-start-read-this)
 2. [Quick Start](#quick-start-5-minutes---follow-this-exact-order)
 3. [Four-Step Architecture](#the-four-step-architecture-critical)
-4. [Dark Mode Setup](#dark-mode-setup)
+4. [One palette — this app has no dark mode](#one-palette--this-app-has-no-dark-mode)
 5. [Critical Rules](#critical-rules-must-follow)
 6. [Semantic Color Tokens](#semantic-color-tokens)
 7. [Common Issues & Fixes](#common-issues--quick-fixes)
@@ -162,18 +161,13 @@ This pattern is **mandatory** - skipping steps will break your theme.
   /* ... all light mode colors */
 }
 
-.dark {
-  --background: hsl(222.2 84% 4.9%);
-  --foreground: hsl(210 40% 98%);
-  --primary: hsl(217.2 91.2% 59.8%);
-  /* ... all dark mode colors */
-}
 ```
 
 **Critical Rules:**
 - ✅ Define at root level (NOT inside `@layer base`)
 - ✅ Use `hsl()` wrapper on all color values
-- ✅ Use `.dark` for dark mode (NOT `.dark { @theme { } }`)
+- ❌ **No second selector redefining these tokens.** A second definition of `--background` under
+  any name is a second palette, and a test counting that token fails.
 
 ### Step 2: Map Variables to Tailwind Utilities
 
@@ -205,48 +199,43 @@ This pattern is **mandatory** - skipping steps will break your theme.
 - ✅ Reference variables directly: `var(--background)`
 - ❌ Never double-wrap: `hsl(var(--background))`
 
-### Step 4: Result - Automatic Dark Mode
+### Step 4: Result — semantic utilities
 
 ```tsx
 <div className="bg-background text-foreground">
-  {/* No dark: variants needed - theme switches automatically */}
+  {/* Semantic tokens only: never bg-blue-600, and never a dark: variant */}
 </div>
 ```
 
 ---
 
-## Dark Mode Setup
+## One palette — this app has no dark mode
 
-### 1. Create ThemeProvider
+**This app has exactly one light palette** (constitution Article XI). There is no theme
+provider, no toggle, no persisted preference, and nothing about appearance for a user to choose.
 
-See `reference/dark-mode.md` for full implementation or use template:
+Two tests hold it, and both were watched failing before they were trusted:
 
-```typescript
-// Copy from: templates/theme-provider.tsx
-```
+- the stylesheet has **no** dark selector, **no** custom variant, **no** colour-scheme query;
+- **`--background` is defined exactly once** — counting the token catches a second palette under
+  any name a generator might invent;
+- and **no `dark:` utility** appears in `src/`.
 
-### 2. Wrap Your App
+### What to do with a generator's dark output
 
-```typescript
-// src/main.tsx
-import { ThemeProvider } from '@/components/theme-provider'
+`npx shadcn add …` emits dark variants and will happily append a dark block and a custom variant
+to `index.css`. **Remove them on arrival — do not remap them.** A rule wired to a mode that does
+not exist is worse than absent: it implies dark mode is supported.
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <App />
-    </ThemeProvider>
-  </React.StrictMode>,
-)
-```
+The generator also **rewrites components you already own** — adding one component has rewritten
+six neighbouring files in this lineage of code. **Generate into a staging folder, delete what you
+already have, then move the rest.**
 
-### 3. Add Theme Toggle
+### If an app genuinely wants dark mode
 
-```bash
-pnpm dlx shadcn@latest add dropdown-menu
-```
-
-See `reference/dark-mode.md` for ModeToggle component code.
+It is not forbidden forever — but it **amends the constitution's palette Article first**, and
+re-adds the second selector deliberately, with the guarding tests updated in the same commit.
+What is forbidden is arriving at dark mode by accident, one generated component at a time.
 
 ---
 
@@ -254,7 +243,7 @@ See `reference/dark-mode.md` for ModeToggle component code.
 
 ### ✅ Always Do:
 
-1. **Wrap color values with `hsl()` in `:root` and `.dark`**
+1. **Wrap color values with `hsl()` in `:root`**
    ```css
    --background: hsl(0 0% 100%);  /* ✅ Correct */
    ```
@@ -283,7 +272,7 @@ See `reference/dark-mode.md` for ModeToggle component code.
 
 ### ❌ Never Do:
 
-1. **Put `:root` or `.dark` inside `@layer base`**
+1. **Put `:root` inside `@layer base`**
    ```css
    /* WRONG */
    @layer base {
@@ -291,10 +280,10 @@ See `reference/dark-mode.md` for ModeToggle component code.
    }
    ```
 
-2. **Use `.dark { @theme { } }` pattern**
+2. **Nest `@theme` inside a selector**
    ```css
-   /* WRONG - v4 doesn't support nested @theme */
-   .dark {
+   /* WRONG - v4 does not support nested @theme */
+   :root {
      @theme {
        --color-primary: hsl(...);
      }
@@ -323,9 +312,9 @@ See `reference/dark-mode.md` for ModeToggle component code.
 
 5. **Use `@apply` directive (deprecated in v4)**
 
-6. **Use `dark:` variants for semantic colors**
+6. **Use a `dark:` variant at all**
    ```tsx
-   /* WRONG */
+   /* WRONG — there is no dark mode here, and a test fails on this */
    <div className="bg-primary dark:bg-primary-dark" />
 
    /* CORRECT */
@@ -363,9 +352,8 @@ Always use semantic names for colors:
 |---------|-------|-----|
 | `bg-primary` doesn't work | Missing `@theme inline` mapping | Add `@theme inline` block |
 | Colors all black/white | Double `hsl()` wrapping | Use `var(--color)` not `hsl(var(--color))` |
-| Dark mode not switching | Missing ThemeProvider | Wrap app in `<ThemeProvider>` |
 | Build fails | `tailwind.config.ts` exists | Delete the file |
-| Text invisible | Wrong contrast colors | Check color definitions in `:root`/`.dark` |
+| Text invisible | Wrong contrast colors | Check the definitions in `:root` — there is only one palette |
 
 See `reference/common-gotchas.md` for complete troubleshooting guide.
 
@@ -379,7 +367,6 @@ All templates are available in the `templates/` directory:
 - **components.json** - shadcn/ui v4 configuration
 - **vite.config.ts** - Vite + Tailwind plugin setup
 - **tsconfig.app.json** - TypeScript with path aliases
-- **theme-provider.tsx** - Dark mode provider with localStorage
 - **utils.ts** - `cn()` utility for class merging
 
 Copy these files to your project and customize as needed.
@@ -395,7 +382,7 @@ Copy these files to your project and customize as needed.
 - [ ] `components.json` exists with `"config": ""`
 - [ ] NO `tailwind.config.ts` file exists
 - [ ] `src/index.css` follows v4 pattern:
-  - [ ] `:root` and `.dark` at root level (not in @layer)
+  - [ ] `:root` at root level (not in @layer), and **no second selector redefining the tokens**
   - [ ] Colors wrapped with `hsl()`
   - [ ] `@theme inline` maps all variables
   - [ ] `@layer base` uses unwrapped variables
@@ -489,7 +476,6 @@ Load `references/plugins-reference.md` for complete documentation including Typo
 For deeper understanding, see:
 
 - **common-gotchas.md** - All the ways it can break (and fixes)
-- **dark-mode.md** - Complete dark mode implementation
 - **migration-guide.md** - Migrating hardcoded colors to CSS variables
 - **plugins-reference.md** - Official Tailwind v4 plugins (Typography, Forms)
 - **advanced-usage.md** - Custom colors and advanced patterns
@@ -502,16 +488,14 @@ Load reference files based on user's specific needs:
 
 ### Load `references/common-gotchas.md` when:
 - User reports "colors not working" or "bg-primary doesn't exist"
-- Dark mode not switching properly
 - Build fails with Tailwind errors
 - User encounters any CSS/configuration issue
 - Debugging theme problems
 
-### Load `references/dark-mode.md` when:
-- User asks to implement dark mode
-- Theme switching not working
-- Need ThemeProvider component code
-- Questions about system theme detection
+### Asked to implement dark mode?
+
+**Do not.** This app has one light palette (constitution Article XI), and two tests enforce it.
+An app that genuinely wants dark mode amends that Article in its own spec first.
 
 ### Load `references/migration-guide.md` when:
 - Migrating from Tailwind v3 to v4

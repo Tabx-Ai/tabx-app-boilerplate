@@ -49,10 +49,16 @@ One folder per ask: `specs/NNN-slug/` (zero-padded, kebab-case, next free number
 
 ## House rules that shape a good spec here
 
-- **A backend feature is a service** (`src/services/<name>/`) behind the envelope — its
-  contract is its Zod schemas. A frontend feature is a page or component over the one client.
-  A design that adds a second entry point, an auth check, or browser-stored state is
-  unconstitutional — redesign, don't defer.
+- **A backend feature is a service** (`src/services/<name>/`) behind the envelope, and a
+  service is **three files**: `controller.ts` (its own routes and its own input parsing),
+  `service.ts` (the domain logic — no router, no client, no environment) and `repository.ts`
+  (the only file that may reach a client). `router.ts` gains **one mount line** and declares no
+  routes of its own. See the `hono` skill.
+- **A frontend feature** is a page or component over the one client, and its domain gets two
+  files: `api/<domain>/path.ts` (every path it serves, and nowhere else) and `controller.ts`
+  (the typed calls). **A component never writes a path and never imports the client.**
+- A design that adds a second entry point, an auth check of its own, or a credential in
+  long-lived browser storage is unconstitutional — redesign, don't defer.
 - **New env keys** appear in three places in one commit: `src/config/`, `.env.example`, and
   `manifest.json`'s `env` (Article VI §3) — say so in `tasks.md`.
 - **Sample/throwaway code is labelled** in its own source, so nobody mistakes scaffold for

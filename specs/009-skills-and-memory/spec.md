@@ -1,6 +1,6 @@
 # Spec 009 — The skills tell the truth: procedural guidance caught up with the law
 
-**Status:** drafted
+**Status:** implemented — all 17 tasks green, eval **6 of 6**, including E004, which follows the corrected skill literally and runs the suite
 **Target:** `.claude/skills/hono/`, `.claude/skills/shadcn/`, `.claude/skills/sdd/`,
 `.claude/skills/implement/`, and `memory/`.
 **Depends on:** **004** (the layering the hono skill contradicts), **005**–**008** (the shapes

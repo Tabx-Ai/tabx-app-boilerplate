@@ -51,6 +51,9 @@ that task.**
 
 - The dev harness (`backend: npm run dev`) runs the whole chain locally — use it to verify a
   service end to end, and remember its context is fake (`x-dev-*` headers).
+- **The app's own routes live under `/app`.** `/authorize` and the unauthorized screen sit
+  outside it, and the frontend dev server forwards the API prefix to the harness with the prefix
+  stripped — so a service path is the same string on both sides.
 - A new env key is three edits in one commit: `src/config/`, `.env.example`,
   `manifest.json`'s `env`.
 

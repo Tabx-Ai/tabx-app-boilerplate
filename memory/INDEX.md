@@ -9,3 +9,4 @@ One line per memory; read the relevant file before touching its area, and add yo
 - [Layout](layout.md) — two self-installing projects, no shared package, tests in `test/`,
   `.env.example` ↔ `manifest.env` move together.
 - [The design system](design-system.md) — one light palette; the greps that mean something, and the two words that only look like dark-mode residue.
+- [Two channels: the law and the skills](skills-and-law.md) — a spec that changes how code is written owes the constitution AND the skills; the procedural one does the damage.

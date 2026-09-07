@@ -34,24 +34,76 @@ The answer is always `{ status, body }`. **Both directions are typed** — see
 - Query values are **strings**. A service that needs a number uses `z.coerce.number()` in its
   own schema.
 
+## Where code goes: four homes
+
+`src/` has exactly four folders beside the entry files, and the set is asserted by a test
+(constitution Article IX):
+
+| Folder | Holds | May import |
+| --- | --- | --- |
+| `config/` | environment parsing, once, typed | nothing of the app's |
+| `services/<name>/` | one domain: controller + service + repository | `config/`; and — **repository only** — `infrastructure/`, `external/` |
+| `infrastructure/` | clients for **persistence**: a database, a cache, object storage | `config/` |
+| `external/` | clients for **third-party APIs** | `config/` |
+
+**The split between the two client homes is by WHO OWNS THE THING, not by protocol.** A
+database client and an object-storage client are both `infrastructure/` though one speaks TCP
+and the other HTTPS; a payment provider's client is `external/` though it is the same HTTPS.
+*"It makes an HTTP call"* is the wrong test, and it is the one you will reach for.
+
 ## Adding a service
 
-1. Create `src/services/<name>/` with the service module: its request/response Zod schemas and
-   its handler functions taking `(input, ctx: AppContext)`.
-2. Register its routes in `src/router.ts` — path + method → service function, with the
-   service's schema parsing the input **before** the function runs.
-3. Add `test/services/<name>/` mirroring it: the happy path, a bad input (expect a 400
-   envelope), and whatever the service's own rules are.
-4. Never read `process.env` in a service — add the key to `src/config/` (and to
+**A service is three files, always** — including one that persists nothing, whose repository is
+a named, empty seam. A test asserts their presence.
+
+1. **`src/services/<name>/controller.ts`** — the service's **edge**. It exports a router
+   sub-app declaring **its own routes**, and parses its own input **before** the service runs,
+   answering a bad input as a **400 naming the field**.
+2. **`src/services/<name>/service.ts`** — the domain logic, as a plain function of
+   `(input, ctx, repo)`. It imports **no router and no client**, and never reads the
+   environment. A test asserts all three.
+3. **`src/services/<name>/repository.ts`** — the **only** file in the service that may import
+   `infrastructure/` or `external/`. It returns domain values, never a driver's row type.
+4. **One line in `src/router.ts`**: `app.route('/<name>', <name>Controller)`.
+   **`router.ts` is a mount list and declares no routes of its own — a `.get(` or `.post(` in
+   that file FAILS A TEST.**
+5. Add `test/services/<name>/` mirroring the three files: the controller **through the router**
+   (so the mount itself is asserted — a controller tested in isolation passes while mounted at
+   the wrong prefix), the service as a plain function with a stub repository, the repository
+   alone.
+6. Never read `process.env` in a service — add the key to `src/config/` (and to
    `.env.example` **and** `manifest.json`'s `env`, same commit).
+
+```ts
+// services/hello/controller.ts — routes and parsing live WITH the service
+export const helloController = new Hono<AppEnv>().get('/', async (c) => {
+  const input = helloInputSchema.safeParse({ name: c.req.query('name') });
+  if (!input.success) return c.json(errorBody('BAD_INPUT', named(input.error)), 400);
+  return c.json(await hello(input.data, c.env.ctx, helloRepository), 200);
+});
+
+// router.ts — one line per service, and nothing else
+app.route('/hello', helloController);
+```
+
+**A service that needs another domain's data calls that domain's SERVICE, never its
+repository.** The repository is the domain's private seam.
 
 ## The context seam
 
 - `src/context.ts` is the **only** file that touches raw identity. It parses the injected
   `context`, refuses the invocation when absent or malformed (a **401-shaped envelope**, not a
-  throw), and passes services a typed `AppContext`.
+  throw), and passes services a **`UserContext`** — a class, not a bare object, built by the
+  parser and by nothing else. So an unvalidated context cannot exist, and a plain object will
+  not compile where one is expected.
+- It carries the person (id, email, name), the workspace, their placement (department,
+  designation, subsidiary, and a role that may be absent) and their **immediate manager** — or
+  nothing, including when that manager has been deactivated. **There is no chain**: a question
+  about anyone further up cannot be asked.
+- Ask it rather than reaching into it: `hasManager()`, `hasRole(name)` (case-insensitive),
+  `isManagedBy(id)`, `inDepartment(id)`.
 - Services receive `ctx` as an argument. If you are importing `context.ts` inside a service,
-  stop — the router already did it.
+  stop — the controller already has it.
 - The proxy's final wire format is not settled; when it changes, `context.ts` and its test are
   the whole diff. Keep it that way.
 
