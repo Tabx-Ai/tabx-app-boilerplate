@@ -8,3 +8,4 @@ One line per memory; read the relevant file before touching its area, and add yo
   own the wire format; the pass token lives in memory only.
 - [Layout](layout.md) — two self-installing projects, no shared package, tests in `test/`,
   `.env.example` ↔ `manifest.env` move together.
+- [The design system](design-system.md) — one light palette; the greps that mean something, and the two words that only look like dark-mode residue.

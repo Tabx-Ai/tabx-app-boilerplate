@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 2.0.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 2.1.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -220,7 +220,25 @@ service modules; this Article says what a service module *is*.
    pin its own half. That is a real cost, accepted knowingly — the alternative breaks the
    standalone-build rule that makes this template cloneable at all.
 
-## Governance
+## Article XI — One Light Palette
+
+1. **There is one palette, and it is light.** It lives in `frontend/src/index.css` under
+   `:root`. No `.dark` block, no `@custom-variant dark`, no `prefers-color-scheme` query, no
+   `dark:` variant, no theme provider, no toggle, and **no persisted preference** — there is
+   nothing about appearance for a user to choose.
+2. **A second selector redefining the tokens is a second palette, whatever it is called.** The
+   test that guards this counts `--background` rather than looking for a selector name, so a
+   second palette invented under any name fails it.
+3. **Semantic tokens only.** `bg-primary`, `text-muted-foreground`, `border-border` — never a
+   raw hex and never a colour utility in a component. The palette is the one place a colour is
+   chosen, which is what makes a re-palette a single-file change rather than a search.
+4. **A component generator's dark output is REMOVED on arrival, not remapped.** A rule wired
+   to a mode that does not exist is worse than absent: it implies dark mode is supported. This
+   is not hypothetical — a generator has appended a dark block and a custom variant to a
+   stylesheet, silently, in this lineage of code.
+5. **An app that genuinely wants dark mode amends this Article in its own spec**, and re-adds
+   the second selector deliberately, with the guarding test updated in the same commit. What is
+   forbidden is arriving at dark mode by accident, one generated component at a time.
 
 1. **Amendments are versioned (semver)** — MAJOR: a principle removed or redefined;
    MINOR: a new principle or section; PATCH: clarification and wording.
@@ -232,6 +250,32 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **2.1.0** (2026-09-07) — **One light palette, and a test that keeps it one.** Adds
+  **Article XI**, appended so nothing renumbers.
+
+  Why: the template was **already** light-only — no dark block, no custom variant, and not one
+  `dark:` utility. What it still carried was a **second palette for a route a generated app
+  does not have**: a dark marketing surface, inherited from a platform that has a public home
+  page. Fifty-eight lines redefining every token, reachable by nothing here, and reading as
+  though dark mode were supported. Three smaller residues pointed at a dark selector that does
+  not exist in this tree, one of them a comment on the button claiming *"the palette swaps
+  underneath"* — **a comment describing a mechanism the file does not have, which is worse than
+  no comment, because the next reader implements against it.**
+
+  And nothing pinned the decision. One palette was a fact of the tree rather than a rule, and
+  it stops being true easily: a component generator has appended a dark block and a custom
+  variant to a stylesheet in this lineage of code, silently. §§1–2 are therefore guarded by
+  tests that were each **watched going red** on reversion.
+
+  **What is given up, stated because an entry that reads as pure gain is a sales pitch.** An app
+  that wants dark mode now has to **amend this Article** rather than add a variant — deliberate
+  friction, and the point. The chart primitive also diverges from upstream shadcn, which emits
+  one style block per theme; here it emits one, because a loop over a single-entry map is the
+  same dead concept with better manners. A future upstream copy-paste will reintroduce the map.
+
+  MINOR: a new Article; nothing removed or redefined. Owner's decision: *"we will only use light
+  design system."*
 
 - **2.0.0** (2026-09-07) — **The pass token may be stored, and the app gets a front door.**
   **Redefines Article V §2** and adds §§4–7 to the same Article.

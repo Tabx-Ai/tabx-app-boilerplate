@@ -3,8 +3,10 @@ import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
 
-// Format: { THEME_NAME: CSS_SELECTOR }
-const THEMES = { light: "", dark: ".dark" } as const
+// This product has ONE light palette, so there is no theme dimension here. Upstream shadcn
+// keeps a theme-to-selector map and emits one style block per entry; the dark-mode selector it
+// names does not exist in this tree, so the map was a loop over a dead concept. A `theme` key
+// on a chart item therefore names the one palette.
 
 export type ChartConfig = {
   [k in string]: {
@@ -12,7 +14,7 @@ export type ChartConfig = {
     icon?: React.ComponentType
   } & (
     | { color?: string; theme?: never }
-    | { color?: never; theme: Record<keyof typeof THEMES, string> }
+    | { color?: never; theme: Record<"light", string> }
   )
 }
 
@@ -77,22 +79,18 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+        // One palette, so one style block — not a loop over a single-entry map, which would
+        // be the same dead concept with better manners.
+        __html: `
+[data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
+    const color = itemConfig.theme?.light || itemConfig.color
     return color ? `  --color-${key}: ${color};` : null
   })
   .join("\n")}
 }
-`
-          )
-          .join("\n"),
+`,
       }}
     />
   )

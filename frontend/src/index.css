@@ -126,73 +126,13 @@
   --chart-5: oklch(0.769 0.188 70.08);
 }
 
-/* --- Step 1b: the home surface -----------------------------------------
- *
- * A SURFACE, not a theme. there is still exactly one theme:
- * there is no switcher, no persisted preference, nothing a user can toggle, no
- * `.dark` block and no `@custom-variant`. What this is, is one route that is
- * made of darker material — the same way a Dialog is a different surface from
- * the page behind it.
- *
- * It works by REDEFINING THE SAME TOKEN NAMES for one subtree. `@theme inline`
- * above maps `--color-background` to `var(--background)`, so the utilities
- * Tailwind already generated resolve against whichever value is in scope:
- * `bg-background` is near-black inside `.home-surface` and #fcfcfc everywhere
- * else. No utility is duplicated and no variant is introduced.
- *
- * The class goes on the marketing layout's root element and NOWHERE ELSE
- * Putting it on <html> or <body> would follow the user into the
- * product screens, which is the entire thing this scoping exists to prevent.
- *
- * Contrast, measured rather than eyeballed: body text #a1a1aa on
- * #0a0a0a is 7.7:1, and the CTA's #1a0e05 on #e8833a is 6.9:1 — both clear of
- * the 4.5:1 AA floor.
- * ------------------------------------------------------------------------ */
-
-.home-surface {
-  /* Near-black page, not pure black: #000 against a bright headline vibrates. */
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-
-  --card: #121212;
-  --card-foreground: #fafafa;
-
-  --popover: #121212;
-  --popover-foreground: #fafafa;
-
-  /* Inverted against the light theme: here the high-contrast button is pale. */
-  --primary: #fafafa;
-  --primary-foreground: #0a0a0a;
-
-  --secondary: #1c1c1c;
-  --secondary-foreground: #fafafa;
-
-  --muted: #1c1c1c;
-  --muted-foreground: #a1a1aa;
-
-  --accent: #1c1c1c;
-  --accent-foreground: #fafafa;
-
-  --border: #262626;
-  --input: #262626;
-  --ring: #52525b;
-
-  /* The one new token pair, and it is deliberately defined ONLY here.
-     `bg-home-accent` therefore resolves to nothing outside this subtree, which
-     makes the scope self-enforcing rather than a rule someone has to remember. */
-  --home-accent: #e8833a;
-  --home-accent-foreground: #1a0e05;
-}
-
 /* --- Step 2: map to Tailwind tokens -------------------------------------- */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* `bg-page`. Mapped here or the utility does not exist — and nothing says so.
-     Defined only in `:root`: `.home-surface` is its own material and never
-     renders a product page, so it has no content surface to name. */
+  /* `bg-page`. Mapped here or the utility does not exist — and nothing says so. */
   --color-page: var(--page);
 
   --color-card: var(--card);
@@ -222,13 +162,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-
-  /* Mapped here so `bg-home-accent` /
-     `text-home-accent-foreground` exist as real utilities; the VALUES live only
-     in `.home-surface`, so the token is generated globally but resolves only
-     there. */
-  --color-home-accent: var(--home-accent);
-  --color-home-accent-foreground: var(--home-accent-foreground);
 
   /* Mapped so `text-chart-1` … exist as real utilities; the
      graphs themselves reach the values through the chart config's

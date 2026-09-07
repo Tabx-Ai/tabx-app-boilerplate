@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils';
 
 /**
  * Semantic tokens only — `bg-primary`, never `bg-blue-600` and never a `dark:`
- * variant. The palette swaps underneath via the `.dark` class (see index.css).
+ * variant. There is one palette and no dark mode, so a semantic token IS the final
+ * answer — nothing swaps underneath it.
  */
 const buttonVariants = cva(
   'inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-none text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50',

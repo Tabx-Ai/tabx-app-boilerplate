@@ -113,6 +113,10 @@ stripped. One transport in both environments, no build-time switch.
 - **A client state store** (Zustand, Redux, Jotai) — the query cache holds server state and the
   pass token lives in one module-scoped slot; nothing else is global.
 - **A second styling system** (CSS modules, styled-components, another UI kit).
+- **Dark mode, a theme switcher, and `next-themes`** — there is **one light palette**
+  (constitution Article XI). A component generator's dark output is **removed on arrival, not
+  remapped**: a rule wired to a mode that does not exist implies the mode is supported. An app
+  that genuinely wants dark mode amends that Article in its own spec.
 - **A router library** — `vite-plugin-pages` folder routing is the router.
 - **`localStorage` and cookies for the pass token** — still refused. `sessionStorage` is the
   **one** admitted store (Article V §2, as amended by the credential gate): it survives a

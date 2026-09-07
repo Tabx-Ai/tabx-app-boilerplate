@@ -24,24 +24,14 @@ import { cn } from '@/lib/utils';
  * less motion. The segment stays where it started, so the indicator is still a
  * shape that means "loading" rather than vanishing.
  *
- * `tone` exists because the mark is solid black artwork on transparency. It is
- * legible on every product and auth screen and invisible on the marketing
- * layout's dark `home-surface`, so that one caller asks for it inverted. A
- * Tailwind `dark:` variant cannot do this — the surface is a class on an
- * ancestor, not a colour scheme (spec 010 FR-001), so nothing in the utility
- * layer can see it.
+ * There is no `tone` prop. It used to exist for a dark marketing surface this
+ * template no longer carries, and a variant wired to a surface that does not
+ * exist is worse than absent: it implies the app has more than one palette.
  *
  * `Loader` (the spinner) stays and is not replaced: it is the *inline* indicator,
  * sized for a button or a table cell. This one owns the page.
  */
-export function AppLoading({
-  className,
-  tone = 'default',
-}: {
-  className?: string;
-  /** `inverted` for the dark `home-surface`; `default` everywhere else. */
-  tone?: 'default' | 'inverted';
-}) {
+export function AppLoading({ className }: { className?: string }) {
   return (
     <div
       role="status"
@@ -52,10 +42,7 @@ export function AppLoading({
           manifest's business. A neutral tile holds the mark's place so the composition
           (mark above bar) survives into a branded app. aria-hidden: the status role
           above already carries the accessible name. */}
-      <div
-        aria-hidden
-        className={cn('h-10 w-10 rounded-xl bg-muted', tone === 'inverted' && 'invert')}
-      />
+      <div aria-hidden className="h-10 w-10 rounded-xl bg-muted" />
 
       <div className="h-1 w-40 overflow-hidden rounded-full bg-muted">
         <div className="animate-progress-slide h-full w-1/3 rounded-full bg-muted-foreground motion-reduce:animate-none" />
