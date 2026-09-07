@@ -1,35 +1,39 @@
-import { Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Suspense, useEffect, useState } from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
 
 import { AppLoading } from '@/components/page/app-loading';
-import { hasToken } from '@/api/token';
+import { TOKEN_LOST_EVENT, hasToken } from '@/api/token';
 
 /**
- * The app shell. Two jobs, and deliberately nothing else:
+ * The app shell, which wraps everything under `/app`. Two jobs, and deliberately nothing else:
  *
- * 1. The TOKEN GATE (constitution Article V §3). Opened without a pass token, the app
- *    renders a sentence in words — never a blank screen or a loop of failing calls. The
- *    client below this would refuse to fire anyway (NoTokenError); the gate is what makes
- *    the refusal legible.
+ * 1. **The token gate** (constitution Article V, as amended by spec 104). Entering the
+ *    application without a token in storage sends the visitor to the one dead end, in words —
+ *    never a blank screen, and never a loop of failing calls.
  * 2. A Suspense boundary above the lazily-imported pages.
  *
- * The shell renders NO <main> — the page wrapper owns that landmark, so a page that skips
- * the wrapper has none, and the routes test exists to catch exactly that.
+ * ## Presence, not validity — and what pays for that
+ *
+ * This checks that a token **exists**, not that it still works: the owner's decision, one
+ * screen and no retry. So a token the platform has revoked stays usable-looking in an open
+ * tab. The counterweight is the client's **401 sweep**, which forgets the token and announces
+ * it — and the listener below is what turns that into this screen without the transport seam
+ * ever importing the router.
+ *
+ * The shell renders NO <main> — the page wrapper owns that landmark, so a page that skips the
+ * wrapper has none, and the routes test exists to catch exactly that.
  */
 export function AppShell() {
-  if (!hasToken()) {
-    return (
-      <div className="flex min-h-svh items-center justify-center bg-background p-8">
-        <div className="max-w-md space-y-2 text-center">
-          <h1 className="text-lg font-semibold text-foreground">Opened outside the platform</h1>
-          <p className="text-sm text-muted-foreground">
-            This app runs inside a workspace on the platform. Open it from the workspace — the link it is
-            opened with carries the pass that lets it reach your data.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const [present, setPresent] = useState(hasToken);
+
+  useEffect(() => {
+    const onLost = () => setPresent(false);
+    window.addEventListener(TOKEN_LOST_EVENT, onLost);
+    return () => window.removeEventListener(TOKEN_LOST_EVENT, onLost);
+  }, []);
+
+  // `replace`, so a refused app route does not sit in history behind the dead end.
+  if (!present) return <Navigate to="/unauthorized" replace />;
 
   return (
     <Suspense fallback={<AppLoading />}>

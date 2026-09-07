@@ -99,17 +99,22 @@ describe('no token → no request (constitution Article V)', () => {
   });
 });
 
-describe('the token lives in memory only', () => {
-  it('boots from the URL, scrubs it from the address bar, and writes NO browser storage', () => {
+describe('the token lives in sessionStorage, and nowhere else', () => {
+  it('boots from the URL, scrubs the address bar, and writes NO localStorage or cookie', () => {
     resetTokenForTests(null);
+    window.sessionStorage.clear();
     window.history.replaceState(null, '', '/?token=boot-token&keep=1');
 
     bootToken();
 
     expect(getToken()).toBe('boot-token');
     expect(window.location.search).toBe('?keep=1');
+    // sessionStorage IS now the token's home (spec 104 amends Article V §2) — it survives a
+    // refresh and dies with the tab. localStorage and cookies stay forbidden: the first
+    // outlives every session, the second is sent automatically.
+    expect(window.sessionStorage.getItem('pass-token')).toBe('boot-token');
     expect(window.localStorage.length).toBe(0);
-    expect(window.sessionStorage.length).toBe(0);
+    expect(document.cookie).toBe('');
   });
 
   it('reads the URL once — a later boot call does not re-read', () => {

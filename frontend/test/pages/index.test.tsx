@@ -35,7 +35,7 @@ describe('the sample page', () => {
 
     render(
       withQueryClient(
-        <RouterProvider router={createMemoryRouter(appRoutes, { initialEntries: ['/'] })} />,
+        <RouterProvider router={createMemoryRouter(appRoutes, { initialEntries: ['/app'] })} />,
       ),
     );
 
@@ -49,9 +49,31 @@ describe('the sample page', () => {
     expect(init.body).toBeUndefined();
   });
 
-  it('renders the failure as a sentence when the platform refuses', async () => {
-    fetchSpy.mockResolvedValueOnce(
-      new Response(JSON.stringify({ error: { code: 'NO_CONTEXT', message: 'refused' } }), {
+  it('renders the failure as a sentence when a call is refused — 403 does NOT log you out', async () => {
+    // The bound on spec 104's 401 sweep: a refused ACTION is not a refused CREDENTIAL, so a
+    // 403 leaves the token alone and the page reports the failure in words.
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify({ error: { code: 'FORBIDDEN', message: 'refused' } }), {
+        status: 403,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+
+    render(
+      withQueryClient(
+        <RouterProvider router={createMemoryRouter(appRoutes, { initialEntries: ['/app'] })} />,
+      ),
+    );
+
+    expect(await screen.findByText(/the call failed/i)).toBeInTheDocument();
+    expect(window.sessionStorage.getItem('pass-token')).toBe('tok-page');
+  });
+
+  it('a 401 forgets the token and lands on the dead end (spec 104 FR-012)', async () => {
+    // The counterweight to a presence-only gate: without this, a token the platform revoked
+    // would sit in an open tab forever and the app would render while failing on every action.
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify({ error: { code: 'TOKEN_INVALID', message: 'gone' } }), {
         status: 401,
         headers: { 'content-type': 'application/json' },
       }),
@@ -59,10 +81,11 @@ describe('the sample page', () => {
 
     render(
       withQueryClient(
-        <RouterProvider router={createMemoryRouter(appRoutes, { initialEntries: ['/'] })} />,
+        <RouterProvider router={createMemoryRouter(appRoutes, { initialEntries: ['/app'] })} />,
       ),
     );
 
-    expect(await screen.findByText(/the call failed/i)).toBeInTheDocument();
+    expect(await screen.findByText(/open this app from your workspace/i)).toBeInTheDocument();
+    expect(window.sessionStorage.getItem('pass-token')).toBeNull();
   });
 });

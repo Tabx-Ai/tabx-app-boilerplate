@@ -53,3 +53,39 @@ document the rules they obey, so a raw search finds the prose and fails on a sen
 
 Those tests read the tree from `process.cwd()`, not `import.meta.url`: under jsdom
 `import.meta.url` is not a `file:` URL and `fileURLToPath` throws.
+
+## The gate (spec 104) — the order, the bound, and the reserved prefix
+
+**The flow:** the platform opens `/authorize?token=…` → the SPA asks the platform
+`GET /__platform/session` with that token → on success it stores the token, scrubs the URL and
+redirects to `/app`; on **any** failure it renders the one dead end.
+
+- **The ORDER is the requirement.** Ping, then store. Storing first works perfectly in the
+  happy path and **leaves a live credential in storage on every failure** — a bug no
+  functional test notices, so a case asserts the order explicitly.
+- **The token travels explicitly to the gate's call.** `request(path, { token })` exists for
+  exactly this: at `/authorize` the token is off the URL and not stored yet.
+- **`sessionStorage`, never `localStorage` or a cookie.** Survives a refresh, dies with the
+  tab. Every access is wrapped in try/catch — a private window can make *any* storage access
+  throw, and that must degrade to "this tab works, a refresh needs the gate again" rather than
+  a blank app.
+- **The gate checks PRESENCE, not validity.** So a revoked token stays usable-looking in an
+  open tab. The counterweight is the client's **401 sweep** — and it is deliberately narrow:
+  **401 alone** forgets the token. A 403/404/500 clears nothing, because a refused *action* is
+  not a refused *credential* and treating them alike logs a user out for clicking something
+  they could not do. Both halves are asserted.
+- **The sweep announces itself with a DOM event**, and the shell listens. That is what keeps
+  the transport seam from importing the router.
+- **`/__platform/` is reserved from every app, forever.** The proxy answers `session` there
+  from its authorize verdict, with **no Lambda invocation** — no cold start per page load, and
+  it works before an app has a backend. Registration order in the Nest module is the whole
+  mechanism; if the catch-all is ever registered first, the path is swallowed and the gate
+  starts invoking Lambdas. The e2e asserts **no invoke**, which is the observable that goes red.
+
+## `/app` is a client-side route, not a deploy path
+
+Product pages live in `src/pages/app/`, so the file-based router produces the prefix and
+nothing re-maps paths. Vite's `base` stays `/` and built assets are root-absolute — which is
+correct, because the SPA is served at the origin root and `/app/...` is resolved in the browser.
+Verified against a **served build**, not the dev server: `/app`, `/app/gallery` and
+`/app/deep/route` all return the shell, and the hashed asset loads.

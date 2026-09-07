@@ -33,8 +33,8 @@ export default defineConfig({
     // LOCAL DEV ONLY, and it is what lets one transport serve both environments.
     //
     // Deployed, the client's base is `https://<slug>.api.<apex>` and its calls go straight
-    // to the platform's proxy. Locally the base is `''`, so a call to `/hello` lands here —
-    // and Vite forwards it to the dev harness with the prefix STRIPPED, because the harness
+    // to the platform's proxy. Locally the base is `/api`, so a call to `/hello` goes out as
+    // `/api/hello` and Vite forwards it to the harness with the prefix STRIPPED, because it
     // serves the app's own paths (`/hello`), not prefixed ones.
     //
     // So `controller.ts` calls the same path in both places; only the base in front of it

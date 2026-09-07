@@ -114,8 +114,10 @@ stripped. One transport in both environments, no build-time switch.
   pass token lives in one module-scoped slot; nothing else is global.
 - **A second styling system** (CSS modules, styled-components, another UI kit).
 - **A router library** — `vite-plugin-pages` folder routing is the router.
-- **Browser storage for credentials** — the pass token is memory-only (Article V §2); no
-  `localStorage`/`sessionStorage` for anything security-bearing.
+- **`localStorage` and cookies for the pass token** — still refused. `sessionStorage` is the
+  **one** admitted store (Article V §2, as amended by the credential gate): it survives a
+  refresh and dies with the tab, where `localStorage` outlives every session and a cookie is
+  sent automatically. Nothing else security-bearing goes into any browser storage.
 - **Server rendering** of any kind — the app is a static SPA (Article IV §4).
 
 ## Contract sharing between the two projects

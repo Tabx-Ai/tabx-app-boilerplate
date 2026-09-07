@@ -21,7 +21,7 @@ import type { ZodType, ZodTypeDef } from 'zod';
 
 import { config } from '@/config/resolve-config';
 
-import { getToken } from './token';
+import { clearToken, getToken } from './token';
 
 /** A failed request, normalised. `status` 0 = the server was never reached. */
 export class ApiError extends Error {
@@ -56,11 +56,19 @@ export interface RequestOptions<T> {
    * the network IS unknown; see the platform's spec 059 finding on `.default()` schemas.
    */
   schema?: ZodType<T, ZodTypeDef, unknown>;
+  /**
+   * Send THIS token instead of the stored one.
+   *
+   * For the gate, and only the gate (spec 104): at `/authorize` the token has come off the URL
+   * and is **not stored yet**, because storing before validating would leave a live credential
+   * behind on every failure. No other caller passes this.
+   */
+  token?: string;
 }
 
 /** Call a backend service through the platform proxy. */
 export async function request<T = unknown>(path: string, options: RequestOptions<T> = {}): Promise<T> {
-  const token = getToken();
+  const token = options.token ?? getToken();
   if (token === null) throw new NoTokenError();
 
   const method = options.method ?? 'GET';
@@ -96,6 +104,16 @@ export async function request<T = unknown>(path: string, options: RequestOptions
   }
 
   if (!response.ok) {
+    // 401 AND ONLY 401 forgets the token (spec 104 FR-012).
+    //
+    // The route gate checks that a token EXISTS, not that it still works — so without this, a
+    // token the platform has revoked would stay in an open tab indefinitely and the app would
+    // render while failing on every interaction.
+    //
+    // Deliberately NOT 403/404/500: a refused *action* is not a refused *credential*, and
+    // treating them alike logs a user out for clicking something they could not do.
+    if (response.status === 401) clearToken();
+
     const message =
       isRecord(payload) && isRecord(payload.error) && typeof payload.error.message === 'string'
         ? payload.error.message

@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 1.2.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 2.0.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -73,13 +73,37 @@ The runtime is fixed, and it is not negotiable from inside a spec.
 1. **This app authenticates nobody.** The platform's proxy validates every caller and
    **injects the identity context** into each invocation. The backend refuses an invocation
    without that context; it never verifies a password, session, or token of its own.
-2. **The pass token is transport, not truth.** The app opens as an iframe or a link carrying
-   a pass token; the frontend reads it **once at boot**, holds it **in memory only**, and
-   attaches it to every backend call for the proxy to validate. It is **never** written to
-   `localStorage`, `sessionStorage`, cookies, or any other browser storage.
-3. **A missing token is a rendered state**, in words ("opened outside the platform"), never a blank
-   screen or a loop of failing requests.
-4. **Authorization is the manifest's.** What this app may reach — tools, connections,
+2. **The pass token is transport, not truth.** The app opens with a pass token on the URL; the
+   frontend reads it **once at boot** and attaches it to every backend call for the proxy to
+   validate. The app never decodes or verifies it.
+   - **It lives in `sessionStorage`, and nowhere else.** It survives a refresh — the gate
+     scrubs the token from the URL, so without this a refresh strands the user on a page they
+     cannot reload — and it **dies with the tab**.
+   - **`localStorage` and cookies remain forbidden.** The first outlives every session; the
+     second is sent automatically, which invites CSRF for a credential that is deliberately a
+     header.
+   - **The cost, stated because this clause used to forbid all browser storage:** any XSS in a
+     generated app can read a live pass token, where before it had to reach into a closure.
+     What bounds it is the tab's lifetime and §6's sweep.
+3. **A missing token is a rendered state**, in words, never a blank screen or a loop of
+   failing requests. There is **one** such screen for every cause — refused token, refused
+   access, unknown app, network failure, no token at all — so it must carry the **remedy**
+   ("open this app from your workspace"), since it cannot carry the cause.
+4. **Every application route lives under `/app`.** The way in (`/authorize`) and the one dead
+   end sit **outside** it: a gate cannot live behind itself, and a dead end that re-checked
+   the gate's condition is how a redirect loop starts.
+5. **The gate validates before it stores.** `/authorize` reads the token from the URL, asks the
+   platform whether it is good, and only then writes it to storage and scrubs the URL. Storing
+   first works in the happy path and leaves a live credential behind on every failure.
+6. **A 401 from any call forgets the token**, and 401 alone. The route gate checks that a token
+   **exists**, not that it still works, so this is what makes a revoked session observable
+   rather than permanent. A 403, 404 or 500 clears nothing: a refused **action** is not a
+   refused **credential**, and treating them alike logs a user out for clicking something they
+   could not do.
+7. **`/__platform/` is reserved by the platform, from every app, forever.** The proxy answers
+   `/__platform/session` itself, from its authorize verdict, without invoking this app. No app
+   may serve a path under that prefix.
+8. **Authorization is the manifest's.** What this app may reach — tools, connections,
    playbooks, SDK capabilities — is what `manifest.json` grants (Article VIII). The app
    never widens its own grant.
 
@@ -208,6 +232,34 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **2.0.0** (2026-09-07) — **The pass token may be stored, and the app gets a front door.**
+  **Redefines Article V §2** and adds §§4–7 to the same Article.
+
+  Why: the token was read from the URL into a module slot and the URL was then scrubbed — so a
+  **refresh lost it**, and the user was stranded on a page they could not reload, holding a
+  link that no longer contained the pass. Nothing validated the token before the app rendered
+  either, so the first real call was what discovered a bad one: a rendered app that fails on
+  interaction rather than a clear refusal at the door.
+
+  So §2 now admits **`sessionStorage`** — and nothing else. `localStorage` and cookies stay
+  forbidden: the first outlives every session, the second is sent automatically. §§4–5 add the
+  front door: every application route under `/app`, with `/authorize` and the one dead end
+  outside it, and the gate **validates before it stores** — the reverse order works in the
+  happy path and leaves a live credential behind on every failure.
+
+  **What is given up, stated because a MAJOR bump whose entry reads as pure gain is a sales
+  pitch.** **Any XSS in a generated app can now read a live pass token**, where before it had
+  to reach into a closure; what bounds it is the tab's lifetime. The gate checks that a token
+  **exists**, not that it still works, so a revoked token stays usable-looking in an open tab —
+  §6 is the counterweight, and it is deliberately narrow: **401 alone** forgets the token,
+  because a refused action is not a refused credential. And §7 takes `/__platform/` away from
+  **every app, forever**, which is a permanent shrinking of what an app may serve; the prefix
+  is ugly on purpose, since `/session` is a name an app would want.
+
+  MAJOR: §2's principle is **redefined**, not extended — the previous clause forbade exactly
+  what this permits. Owner's decision, taken after `localStorage` was asked for and narrowed to
+  `sessionStorage`.
 
 - **1.2.0** (2026-09-07) — **The frontend works out where its backend is, and stops building
   envelopes.** Adds **Article X**, appended so nothing renumbers.

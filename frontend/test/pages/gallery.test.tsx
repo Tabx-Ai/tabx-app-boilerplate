@@ -15,7 +15,7 @@ describe('the component gallery', () => {
     render(
       withQueryClient(
         <RouterProvider
-          router={createMemoryRouter(appRoutes, { initialEntries: ['/gallery'] })}
+          router={createMemoryRouter(appRoutes, { initialEntries: ['/app/gallery'] })}
         />,
       ),
     );
