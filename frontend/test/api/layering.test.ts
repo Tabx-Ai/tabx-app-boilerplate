@@ -95,3 +95,24 @@ describe('no envelope anywhere in the frontend (FR-006)', () => {
     expect(offenders.map(rel)).toEqual([]);
   });
 });
+
+describe('the navigation shape is SHIPPED and USED BY NOTHING (the navigation Article)', () => {
+  it('no route, layout or page imports the rail or the section sidebar', () => {
+    // "Shipped unused" is the REQUIREMENT, not an oversight — so a route quietly adopting one
+    // is a failure of that decision even though it looks like progress.
+    const adopters = sources().filter((f) => {
+      const where = rel(f);
+      if (where.startsWith('components/app/')) return false;
+      return /from\s+['"][^'"]*components\/app\/(app-rail|section-sidebar)['"]/.test(code(f));
+    });
+    expect(adopters.map(rel)).toEqual([]);
+  });
+
+  it('each file says it is provided and unused, so a cleanup does not delete it', () => {
+    // Without this, the first tidy-up removes two components as dead code — correctly, by its
+    // own lights, because nothing renders them.
+    for (const file of ['components/app/areas.ts', 'components/app/app-rail.tsx', 'components/app/section-sidebar.tsx']) {
+      expect(readFileSync(SRC + file, 'utf8')).toMatch(/provided, unused/i);
+    }
+  });
+});

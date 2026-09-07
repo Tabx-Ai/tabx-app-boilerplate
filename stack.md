@@ -44,6 +44,10 @@ Article IX) so the next service is a copy of the last:
   rule is invisible at runtime: a service that imports a database still answers its route.
 - **Policies are code, in one folder**, and `RoleGuard` on the frontend is **advice about what
   to render** — the server checks every guarded operation again. See constitution Article XII.
+- **A mini rail and a generic section sidebar are PROVIDED and used by nothing** (Article XIII).
+  An app that needs navigation adopts them; one that does not renders neither. They are built
+  from the design tokens rather than composing the vendored sidebar primitive, which would
+  impose a provider and a state cookie on every adopter.
 
 ## backend/ — Hono on AWS Lambda
 

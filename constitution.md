@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 2.3.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 2.4.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -236,6 +236,26 @@ service modules; this Article says what a service module *is*.
    pin its own half. That is a real cost, accepted knowingly — the alternative breaks the
    standalone-build rule that makes this template cloneable at all.
 
+## Article XI — One Light Palette
+
+1. **There is one palette, and it is light.** It lives in `frontend/src/index.css` under
+   `:root`. No `.dark` block, no `@custom-variant dark`, no `prefers-color-scheme` query, no
+   `dark:` variant, no theme provider, no toggle, and **no persisted preference** — there is
+   nothing about appearance for a user to choose.
+2. **A second selector redefining the tokens is a second palette, whatever it is called.** The
+   test that guards this counts `--background` rather than looking for a selector name, so a
+   second palette invented under any name fails it.
+3. **Semantic tokens only.** `bg-primary`, `text-muted-foreground`, `border-border` — never a
+   raw hex and never a colour utility in a component. The palette is the one place a colour is
+   chosen, which is what makes a re-palette a single-file change rather than a search.
+4. **A component generator's dark output is REMOVED on arrival, not remapped.** A rule wired
+   to a mode that does not exist is worse than absent: it implies dark mode is supported. This
+   is not hypothetical — a generator has appended a dark block and a custom variant to a
+   stylesheet, silently, in this lineage of code.
+5. **An app that genuinely wants dark mode amends this Article in its own spec**, and re-adds
+   the second selector deliberately, with the guarding test updated in the same commit. What is
+   forbidden is arriving at dark mode by accident, one generated component at a time.
+
 ## Article XII — Policies Are Code, In One Folder
 
 1. **Every rule about who may do what lives in `backend/src/policies/`.** A rule written inside
@@ -263,25 +283,31 @@ service modules; this Article says what a service module *is*.
    identity and announces no change to it. The window is one of **stale input, never unchecked
    action** — §7 still runs on every operation.
 
-## Article XI — One Light Palette
+## Article XIII — Navigation, If Any
 
-1. **There is one palette, and it is light.** It lives in `frontend/src/index.css` under
-   `:root`. No `.dark` block, no `@custom-variant dark`, no `prefers-color-scheme` query, no
-   `dark:` variant, no theme provider, no toggle, and **no persisted preference** — there is
-   nothing about appearance for a user to choose.
-2. **A second selector redefining the tokens is a second palette, whatever it is called.** The
-   test that guards this counts `--background` rather than looking for a selector name, so a
-   second palette invented under any name fails it.
-3. **Semantic tokens only.** `bg-primary`, `text-muted-foreground`, `border-border` — never a
-   raw hex and never a colour utility in a component. The palette is the one place a colour is
-   chosen, which is what makes a re-palette a single-file change rather than a search.
-4. **A component generator's dark output is REMOVED on arrival, not remapped.** A rule wired
-   to a mode that does not exist is worse than absent: it implies dark mode is supported. This
-   is not hypothetical — a generator has appended a dark block and a custom variant to a
-   stylesheet, silently, in this lineage of code.
-5. **An app that genuinely wants dark mode amends this Article in its own spec**, and re-adds
-   the second selector deliberately, with the guarding test updated in the same commit. What is
-   forbidden is arriving at dark mode by accident, one generated component at a time.
+1. **An app that needs no navigation renders none.** Most apps built from this template are one
+   screen; a rail with a single entry is noise.
+2. **If it needs navigation, it uses the two provided components** — the mini rail of areas, and
+   the generic section sidebar. **A hand-rolled sidebar is a defect**, because the value of
+   these is three details that produce no error when they are wrong.
+3. **One list of destinations.** The rail reads it; nothing keeps a second copy. An entry
+   pointing at a route that does not exist is a control that does nothing when clicked, so the
+   list ships **empty**.
+4. **The section sidebar WRAPS the page; it never nests inside the page wrapper.** The wrapper
+   owns the `<main>` landmark, so nesting puts navigation *within* main content — **nothing
+   throws, nothing looks wrong**, and only a screen-reader user finds out. This is the clause
+   most worth reading twice.
+5. **The section sidebar is generic — one component, every section.** A per-section copy is *n*
+   copies of the current-entry logic, drifting silently because each looks right on its own.
+6. **A section's root entry matches EXACTLY.** Every child path begins with its section's path,
+   so a prefix match lights the root on every page in the section.
+7. **Two sidebars are two NAMED landmarks.** Unnamed, they are two identical rows in a screen
+   reader's list.
+8. **Navigation evaluates no rules.** An entry that should be hidden is wrapped in the policy
+   guard by its app; a navigation component that decided access would be a second enforcement
+   point, and the server is the only one that counts.
+
+## Governance
 
 1. **Amendments are versioned (semver)** — MAJOR: a principle removed or redefined;
    MINOR: a new principle or section; PATCH: clarification and wording.
@@ -293,6 +319,30 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **2.4.0** (2026-09-07) — **A navigation shape, provided and not imposed.** Adds
+  **Article XIII**.
+
+  Why: most apps built from this template are one screen and need no navigation at all — but the
+  ones that do had no agreed shape, so each would invent its own, and the three details that
+  matter would be got wrong independently each time. The components are therefore **shipped and
+  wired to nothing**: available to an app that needs them, invisible to one that does not.
+
+  **What the components are actually for is §4.** The section sidebar wraps the page rather than
+  nesting inside it, because the page wrapper owns the `main` landmark — get that wrong and
+  navigation sits inside main content, **nothing throws, nothing looks different**, and the only
+  one who notices is somebody using a screen reader. §6 is the second: a section's root entry
+  needs an exact match, or every child page lights it.
+
+  **What is given up, stated because an entry that reads as pure gain is a sales pitch.** Two
+  components nobody renders **will rot** — a token rename, a router upgrade — so tests render
+  them, which is the substitute for being exercised by use and is strictly weaker. They will
+  also read as dead code to the next cleanup, which is why each says in its own header that it
+  is provided and unused, and a test asserts that sentence is still there. And they **do not
+  compose the vendored sidebar primitive**, which would impose a provider and a state cookie on
+  every app that adopted a component this one merely offers.
+
+  MINOR: a new Article, appended so nothing renumbers; nothing removed, nothing redefined.
 
 - **2.3.0** (2026-09-07) — **Policies are code, in one folder, and the server is the
   enforcement.** Adds **Article XII**, and amends Article IX's folder set from four to five.
