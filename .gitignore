@@ -1,0 +1,25 @@
+# The standalone mirror's own ignore rules (TabX's root .gitignore is not part of the
+# subtree, so a clone of this repo would otherwise show installs and builds as untracked).
+
+# Installs — the lockfiles ARE committed, on purpose: peer resolution rides them
+# (memory/layout.md), so a clone runs `npm ci`, never a fresh resolve.
+node_modules/
+
+# Builds — the frontend's `vite build`; the backend emits nothing (`noEmit`), it is bundled
+# by the deploy tooling.
+dist/
+*.tsbuildinfo
+
+# Secrets — never committed (constitution, Article on secrets). Credentials reach a
+# generated app by deploy-time env injection into the Lambda, not from this tree.
+.env
+.env.*
+!.env.example
+
+# Test and tool output
+coverage/
+.vite/
+
+# Editors and OS
+.DS_Store
+*.log
