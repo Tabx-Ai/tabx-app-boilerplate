@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 2.1.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 2.2.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -73,6 +73,21 @@ The runtime is fixed, and it is not negotiable from inside a spec.
 1. **This app authenticates nobody.** The platform's proxy validates every caller and
    **injects the identity context** into each invocation. The backend refuses an invocation
    without that context; it never verifies a password, session, or token of its own.
+   - **What the context carries:** the person (id, email, name), the workspace, their
+     placement (department, designation, subsidiary, and a role that may be absent), and their
+     **immediate manager** — or `null` when they report to nobody, or when their manager has
+     been deactivated.
+   - **There is no chain.** A rule about anyone above the immediate manager is unwritable, and
+     that is a decision rather than an oversight.
+   - **It is parsed into a `UserContext`**, in `backend/src/context.ts`, and services receive
+     that class rather than a bare object. It is built by the parser and by nothing else, so an
+     unvalidated context cannot exist — and the questions a service would otherwise each answer
+     differently ("do they have a manager?", "do they hold this role?") live on it, once.
+   - **Unknown keys are tolerated.** The platform widens this context over time; an app
+     generated today must not start refusing invocations the day it does.
+   - **The frontend reads identity from the platform**, through the reserved session path, once
+     per app load — it is never persisted, and a failure to load it renders a missing state
+     rather than blanking the app or looking like a sign-out.
 2. **The pass token is transport, not truth.** The app opens with a pass token on the URL; the
    frontend reads it **once at boot** and attaches it to every backend call for the proxy to
    validate. The app never decodes or verifies it.
@@ -250,6 +265,34 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **2.2.0** (2026-09-07) — **An app is told who is calling, not just that somebody is.** Extends
+  **Article V §1**.
+
+  Why: the injected context was three fields, one of them optional — an internal id, the
+  workspace, and sometimes a name. An app could not address the person, show a job title, or
+  know who they report to, so every screen that wanted any of it had to invent something or
+  fetch it from an endpoint the app would have to write. It now carries the email, the name,
+  the department, designation, subsidiary and role, and the **immediate manager**.
+
+  Identity also becomes a **`UserContext` class** rather than a parsed object. A class buys one
+  home for the questions a service would otherwise answer slightly differently each time, and a
+  construction guarantee: it is built by the parser and by nothing else, so a bare object cannot
+  stand in for a validated identity — the compiler refuses it, which is how the sample's own
+  tests had to change.
+
+  **What is given up, stated because an entry that reads as pure gain is a sales pitch.** The
+  manager is the **immediate** one only, so a policy about anyone further up the reporting line
+  cannot be written — the owner's decision, and spec 107's predicates inherit the limit. The
+  platform caches this identity briefly, so a role changed mid-session is stale for up to that
+  window; what is **not** cached is the authorization verdict, which is what keeps a revoked
+  session dying immediately. And the shape is now declared in **two places** — the platform's
+  contract and this template's parser — because the standalone-build rule forbids a shared
+  package; each side's tests pin its own half, and a field added on one side is silently
+  ignored by the other rather than failing loudly.
+
+  MINOR: an existing clause is extended, and nothing it said before changes meaning. Owner's
+  decision.
 
 - **2.1.0** (2026-09-07) — **One light palette, and a test that keeps it one.** Adds
   **Article XI**, appended so nothing renumbers.

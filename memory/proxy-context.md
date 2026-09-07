@@ -1,8 +1,10 @@
 # The proxy context — identity arrives, it is never established here
 
 - **This app authenticates nobody** (constitution Article V). The platform's proxy validates
-  the caller and injects `context` (user id, workspace id, display name) into every
-  invocation. `backend/src/context.ts` parses it, refuses the invocation when it is absent or
+  the caller and injects `context` into every invocation — the person (id, email, name), the
+  workspace, their placement (department, designation, subsidiary, and a role that may be
+  absent), and their **immediate manager** (or `null`, including when that manager has been
+  deactivated). **No chain**: a question about anyone further up cannot be asked. `backend/src/context.ts` parses it, refuses the invocation when it is absent or
   malformed (a typed 401-shaped envelope), and hands services a typed `AppContext`.
 - **Two files own the wire format, and only two**: `backend/src/context.ts` and
   `frontend/src/api/client.ts`. The proxy is not built yet, so its final format may differ
@@ -89,3 +91,36 @@ nothing re-maps paths. Vite's `base` stays `/` and built assets are root-absolut
 correct, because the SPA is served at the origin root and `/app/...` is resolved in the browser.
 Verified against a **served build**, not the dev server: `/app`, `/app/gallery` and
 `/app/deep/route` all return the shell, and the hashed asset loads.
+
+## `UserContext` — why a class, and the one thing it breaks
+
+Services receive a **class**, not the parsed object. It is built by `parseContext` and by
+nothing else, so an unvalidated context cannot exist — and **a bare object no longer compiles
+where one is expected**, which is exactly what happened to the sample's own tests when this
+landed. `test/context.fixture.ts` exists for that: it builds a real context through the parser,
+because a fixture that could forge one would not be testing what services receive.
+
+- **Unknown keys are tolerated** (`.passthrough()`). The platform widens this context over
+  time; an app generated today must not start refusing invocations the day it does. The same
+  forward-compatibility promise the manifest schema makes.
+- **The shape is declared twice** — here and in the platform's contract — because the
+  standalone-build rule forbids a shared package. A field added on one side is silently ignored
+  by the other; each side's tests pin its own half. That is the cost, and it is in the
+  constitution's changelog rather than only here.
+- `hasRole` matches **case-insensitively**: a role's name is presentation, and callers should
+  not have to know its casing.
+
+## Identity on the frontend
+
+`useIdentity()` asks the platform's reserved session path **once per app load** and shares the
+answer — ten consumers make one request, which is asserted, because one call per consumer is
+the classic mistake with a hook over a request.
+
+- **It is never stored.** Only the pass token is (Article V §2). Identity is re-read per load,
+  so a change in the workspace is picked up next time rather than cached into staleness.
+- **A failure is not a sign-out.** The gate has already refused a caller with no valid token, so
+  a failure here means the platform answered oddly: components render their own missing state
+  and the app keeps working.
+- **A test stubbing `fetch` for a page under `/app` must answer PER URL** — landing there fires
+  the page's own call *and* the identity call, so one blanket answer feeds one of them the
+  other's shape and fails a schema parse for reasons that have nothing to do with the test.

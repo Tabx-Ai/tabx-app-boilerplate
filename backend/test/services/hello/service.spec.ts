@@ -9,8 +9,9 @@ import { describe, expect, it } from 'vitest';
 import { config } from '../../../src/config/index.js';
 import type { HelloRepository } from '../../../src/services/hello/repository.js';
 import { hello, helloInputSchema } from '../../../src/services/hello/service.js';
+import { aContext } from '../../context.fixture.js';
 
-const ctx = { userId: 'u-1', workspaceId: 'w-9', displayName: 'Ada' };
+const ctx = aContext();
 
 /**
  * The app name is CONFIG's, not a literal in the service (spec 101 FR-006) — its deployed
@@ -36,8 +37,10 @@ describe('the sample service', () => {
 
   it('falls back to the context display name, then to a plain word', async () => {
     expect((await hello({}, ctx, empty)).message).toBe('Hello, Ada.');
-    expect((await hello({}, { userId: 'u', workspaceId: 'w' }, empty)).message).toBe(
-      'Hello, there.',
+    // Every context carries a name (the platform's schema requires one), so the old
+    // 'no display name' fallback has nothing to fall back FROM — the name is the answer.
+    expect((await hello({}, aContext({ user: { id: 'u', email: 'e@x', name: 'Bob' } }), empty)).message).toBe(
+      'Hello, Bob.',
     );
   });
 

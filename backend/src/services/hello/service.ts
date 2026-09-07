@@ -14,7 +14,7 @@
 import { z } from 'zod';
 
 import { config } from '../../config/index.js';
-import type { AppContext } from '../../context.js';
+import type { UserContext } from '../../context.js';
 import type { HelloRepository } from './repository.js';
 
 /** Query values are strings (memory/entry-contract.md); parse them here, never upstream. */
@@ -40,11 +40,11 @@ export interface HelloResponse {
  */
 export async function hello(
   input: HelloInput,
-  ctx: AppContext,
+  ctx: UserContext,
   repo: HelloRepository,
 ): Promise<HelloResponse> {
   const greeting = (await repo.greetingFor(ctx.userId)) ?? 'Hello';
-  const who = input.name ?? ctx.displayName ?? 'there';
+  const who = input.name ?? ctx.displayName;
   return {
     message: `${greeting}, ${who}.`,
     workspaceId: ctx.workspaceId,

@@ -9,8 +9,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { handler } from '../../../src/handler.js';
+import { rawContext } from '../../context.fixture.js';
 
-const ctx = { userId: 'u-1', workspaceId: 'w-9', displayName: 'Ada' };
+// The RAW shape the platform injects — the parser refuses anything else, which is what
+// makes 'no service ever sees an anonymous user' true rather than intended.
+const ctx = rawContext;
 
 const call = (path: string, query: Record<string, string> = {}) =>
   handler({ path, method: 'GET', query, body: null, context: ctx });

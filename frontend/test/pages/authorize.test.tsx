@@ -23,11 +23,33 @@ const renderAt = (path: string) =>
     ),
   );
 
-const ok = () =>
-  new Response(JSON.stringify({ context: { userId: 'u-1', workspaceId: 'w-9' } }), {
-    status: 200,
+const CONTEXT = {
+  user: { id: 'u-1', email: 'ada@example.com', name: 'Ada' },
+  workspace: { id: 'w-9' },
+  placement: {
+    department: { id: 'd-1', name: 'Engineering' },
+    designation: { id: 'g-1', name: 'Staff Engineer' },
+    subsidiary: { id: 's-1', name: 'Acme UK' },
+    role: null,
+  },
+  manager: null,
+};
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
     headers: { 'content-type': 'application/json' },
   });
+
+/**
+ * Answer PER URL. Landing in the app fires more than one call — the sample page's own, and
+ * spec 106's identity — so a single blanket answer would feed one of them the other's shape
+ * and fail a schema parse for reasons that have nothing to do with the gate.
+ */
+const ok = () => (url: string) =>
+  url.includes('/__platform/session')
+    ? json({ context: CONTEXT })
+    : json({ message: 'Hello, Ada.', workspaceId: 'w-9', app: 'boilerplate-app' });
 
 const refused = (status: number) =>
   new Response(JSON.stringify({ error: { code: 'TOKEN_INVALID', message: 'no' } }), {
@@ -49,7 +71,8 @@ afterEach(() => {
 
 describe('the gate', () => {
   it('validates the URL token, THEN stores it, then lands in the app', async () => {
-    fetchSpy.mockResolvedValue(ok());
+    const answer = ok();
+    fetchSpy.mockImplementation((url: string) => Promise.resolve(answer(url)));
 
     renderAt('/authorize?token=tok-good');
 

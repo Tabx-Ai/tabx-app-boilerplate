@@ -10,6 +10,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getHello } from '@/api/hello/controller';
+import { useIdentity } from '@/hooks/use-identity';
 import PageHeader from '@/components/page/page-header';
 import PageWrapper from '@/components/page/page-wrapper';
 import Loader from '@/components/page/loader';
@@ -19,6 +20,9 @@ export default function Page() {
     queryKey: ['hello'],
     queryFn: () => getHello(),
   });
+  // Who is signed in, according to the platform. Nothing here maintains an identity of its
+  // own — and a failure to load one renders as a missing line, never as a blank app.
+  const { identity, failed: identityFailed } = useIdentity();
 
   return (
     <PageWrapper title="Home">
@@ -26,6 +30,16 @@ export default function Page() {
         title="It runs"
         description="This sample page calls the backend's throwaway hello service through the platform seam."
       />
+      <div className="mt-2 text-sm text-muted-foreground">
+        {identity && (
+          <p>
+            Signed in as <span className="text-foreground">{identity.user.name}</span>{' '}
+            ({identity.user.email})
+          </p>
+        )}
+        {identityFailed && <p>The platform did not say who you are.</p>}
+      </div>
+
       <div className="mt-6 text-sm">
         {hello.isPending && <Loader variant="subtle" />}
         {hello.isError && (

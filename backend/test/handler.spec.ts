@@ -5,9 +5,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { handler } from '../src/handler.js';
+import { rawContext } from './context.fixture.js';
 import { app } from '../src/router.js';
 
-const ctx = { userId: 'u-1', workspaceId: 'w-1', displayName: 'Ada' };
+// The RAW shape the platform injects — the parser refuses anything else.
+const ctx = rawContext;
 
 // A test-only route that throws, registered BEFORE the first request builds Hono's matcher
 // (routes cannot be added afterwards). It proves the 500 net catches ANY service, not only
@@ -31,7 +33,7 @@ describe('the envelope in, the envelope out', () => {
     expect(answer.status).toBe(200);
     expect(answer.body).toEqual({
       message: 'Hello, Grace.',
-      workspaceId: 'w-1',
+      workspaceId: rawContext.workspace.id,
       app: 'boilerplate-app',
     });
   });
