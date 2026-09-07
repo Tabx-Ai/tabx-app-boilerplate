@@ -10,7 +10,7 @@
  * - Every failure — HTTP, network, parse, or the platform's own refusal — leaves here as an
  *   `ApiError`; no caller ever sees a `Response`.
  * - No token → the call is refused HERE, before the network: the app renders the
- *   "opened outside TabX" state instead of teaching the user a loop of 401s.
+ *   "opened outside the platform" state instead of teaching the user a loop of 401s.
  */
 import type { ZodType, ZodTypeDef } from 'zod';
 
@@ -34,7 +34,7 @@ export class ApiError extends Error {
 /** Thrown when the app was opened without a pass token — the client refuses to fire. */
 export class NoTokenError extends ApiError {
   constructor() {
-    super(0, 'This app was opened outside TabX; no pass token is present.');
+    super(0, 'This app was opened outside the platform; no pass token is present.');
     this.name = 'NoTokenError';
   }
 }

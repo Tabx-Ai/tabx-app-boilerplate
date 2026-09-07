@@ -3,7 +3,7 @@
    third party to log. The imports come first so their @font-face rules are in
    place before anything can render text with them.
 
-   BOTH are loaded, not just the chosen one (spec 035). A workspace picks its typeface at
+   BOTH are loaded, not just the chosen one. A workspace picks its typeface at
    runtime from a store, and swapping which stylesheet is imported is not something a built
    CSS bundle can do — so the cost of the choice is one extra variable font on first load,
    and the alternative was a CDN request per workspace, which Article VII's reasoning about
@@ -13,7 +13,7 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
- * TabX theme — ONE palette, light only (spec 010 FR-001).
+ * The theme — ONE palette, light only.
  *
  * Tailwind v4 + shadcn/ui, per the tailwind-v4-shadcn skill's four steps. Each
  * step fails SILENTLY if skipped, so none of them is optional:
@@ -34,7 +34,7 @@
  *
  * Tailwind is imported WITHOUT the `important` flag. The reference this palette
  * came from uses `@import "tailwindcss" important` because it is embedded in an
- * enterprise shell whose unlayered global CSS beats layered utilities; TabX owns
+ * enterprise shell whose unlayered global CSS beats layered utilities; this app owns
  * its own document, and !important on every utility would only make its own
  * overrides harder to reason about.
  * ------------------------------------------------------------------------ */
@@ -101,7 +101,7 @@
   /* The sidebar's own surface, added by `shadcn add sidebar` and then brought
      into this palette: the generator's defaults were a bluish grey from a
      different base colour, and it also appended a `.dark` block and a
-     `@custom-variant dark` — both removed (FR-001). Values here are the app's
+     `@custom-variant dark` — both removed. Values here are the app's
      own greys, one step off the page background so the sidebar reads as a
      surface rather than a hole. */
   --sidebar: oklch(0.97 0 0);
@@ -113,7 +113,7 @@
   --sidebar-border: #dedede;
   --sidebar-ring: oklch(0.708 0 0);
 
-  /* The chart series colours (spec 081 FR-009). Five, cycled by the graph
+  /* The chart series colours. Five, cycled by the graph
      adapters, consumed through shadcn's chart config as `var(--chart-N)` —
      never a hex literal inside a graph component. One light set, like
      everything above: there is no second palette to keep in sync. Values are
@@ -126,9 +126,9 @@
   --chart-5: oklch(0.769 0.188 70.08);
 }
 
-/* --- Step 1b: the home surface (spec 011 FR-019 … FR-024) ----------------
+/* --- Step 1b: the home surface -----------------------------------------
  *
- * A SURFACE, not a theme. TabX still has exactly one theme (spec 010 FR-001):
+ * A SURFACE, not a theme. there is still exactly one theme:
  * there is no switcher, no persisted preference, nothing a user can toggle, no
  * `.dark` block and no `@custom-variant`. What this is, is one route that is
  * made of darker material — the same way a Dialog is a different surface from
@@ -141,10 +141,10 @@
  * else. No utility is duplicated and no variant is introduced.
  *
  * The class goes on the marketing layout's root element and NOWHERE ELSE
- * (FR-024). Putting it on <html> or <body> would follow the user into the
+ * Putting it on <html> or <body> would follow the user into the
  * product screens, which is the entire thing this scoping exists to prevent.
  *
- * Contrast, measured rather than eyeballed (FR-038): body text #a1a1aa on
+ * Contrast, measured rather than eyeballed: body text #a1a1aa on
  * #0a0a0a is 7.7:1, and the CTA's #1a0e05 on #e8833a is 6.9:1 — both clear of
  * the 4.5:1 AA floor.
  * ------------------------------------------------------------------------ */
@@ -177,7 +177,7 @@
   --input: #262626;
   --ring: #52525b;
 
-  /* The one new token pair, and it is deliberately defined ONLY here (FR-023).
+  /* The one new token pair, and it is deliberately defined ONLY here.
      `bg-home-accent` therefore resolves to nothing outside this subtree, which
      makes the scope self-enforcing rather than a rule someone has to remember. */
   --home-accent: #e8833a;
@@ -223,14 +223,14 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Spec 011 FR-023. Mapped here so `bg-home-accent` /
+  /* Mapped here so `bg-home-accent` /
      `text-home-accent-foreground` exist as real utilities; the VALUES live only
      in `.home-surface`, so the token is generated globally but resolves only
      there. */
   --color-home-accent: var(--home-accent);
   --color-home-accent-foreground: var(--home-accent-foreground);
 
-  /* Spec 081 FR-009. Mapped so `text-chart-1` … exist as real utilities; the
+  /* Mapped so `text-chart-1` … exist as real utilities; the
      graphs themselves reach the values through the chart config's
      `var(--chart-N)`, so this mapping is for the odd label or legend dot that
      wants a matching utility class. */

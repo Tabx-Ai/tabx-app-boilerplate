@@ -6,7 +6,7 @@
   services), `context.ts` (the identity seam), `config/` (Zod, typed namespaces),
   `services/hello/` (throwaway sample), `dev-server.ts` (local harness, never imported by the
   handler). Tests in `test/` mirroring `src/`.
-- **frontend/**: the TabX frontend base (ui/, logics/, page furniture, lib/, theme/, config
+- **frontend/**: the platform's frontend base (ui/, logics/, page furniture, lib/, theme/, config
   resolution, query client) with one sample page; `api/client.ts` is the transport seam
   (envelope + memory-held pass token). Tests in `test/` mirroring `src/`.
 

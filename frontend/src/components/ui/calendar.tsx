@@ -185,7 +185,7 @@ function CalendarDayButton({
 
   // A native <button> with the same variants, NOT <Button ref={…}> as the
   // registry ships it (spec 010 FR-009 — generated code is a starting point).
-  // TabX's Button is spec 003's, and it types its props as
+  // this template's Button types its props as
   // ButtonHTMLAttributes, which carries no `ref`. Passing one is a type error,
   // and editing that component to accept it would rewrite a reviewed file for
   // one call site. `buttonVariants` gives the identical classes.

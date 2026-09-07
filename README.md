@@ -1,10 +1,11 @@
-# TabX app boilerplate
+# App boilerplate
 
-The seed every **vibecoded app** in a [TabX](https://tabx.ai) workspace is cloned from — a
-self-governing mini-workspace over two independent npm projects.
+A self-governing mini-workspace over two independent npm projects: the starting point for an
+app that runs **inside a workspace on the platform**, and is opened by the people who work
+there.
 
-Mirrored from `apps/boilerplate` in the TabX platform repo. **Clone it directly; do not
-hand-edit the mirror** — changes land in the platform repo and are pushed here.
+**The project's own name and description live in `manifest.json`** — injected when the app is
+created, read by the app, invented nowhere else.
 
 ## What an app built from this is
 
@@ -37,7 +38,8 @@ hand-edit the mirror** — changes land in the platform repo and are pushed here
 ## Run it locally
 
 ```bash
-git clone https://github.com/Tabx-Ai/tabx-app-boilerplate.git my-app && cd my-app
+# clone this repository, then:
+cd my-app
 
 (cd backend  && npm ci && npm run dev)     # dev harness: HTTP → envelope → handler, :8787
 (cd frontend && npm ci && npm run dev)     # Vite, proxying /invoke to the harness

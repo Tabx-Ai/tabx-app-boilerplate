@@ -5,7 +5,7 @@
  * whatever the machine is configured for, so the same code produces `10 Oct 2025` on one
  * developer's laptop, `Oct 10, 2025` on another's and something else again in a container —
  * and a test asserting the output stops testing the app and starts testing the environment.
- * A constant here is one line to change when TabX localises; an ambient default is a
+ * A constant here is one line to change when the app localises; an ambient default is a
  * dependency nobody declared.
  *
  * **Short month name, never `10/09/2025`**, which is two different days depending on who is

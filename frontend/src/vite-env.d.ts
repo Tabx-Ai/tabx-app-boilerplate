@@ -13,7 +13,7 @@
 interface ImportMetaEnv {
   /**
    * Optional override for the API base URL. Absent in every normal environment:
-   * TabX is same-origin. Set it in `apps/frontend/.env.local` only — the repo
+   * the platform is same-origin. Set it in this project's `.env.local` only — the repo
    * root `.env` is deliberately outside Vite's `envDir`.
    */
   readonly VITE_API_BASE_URL?: string;

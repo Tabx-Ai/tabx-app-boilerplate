@@ -1,9 +1,9 @@
 # App Constitution
 
-**Version:** 1.0.0  **Ratified:** 2026-09-06
+**Version:** 1.0.1  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
 
-This is the governing document for **this app** — a vibecoded app that lives inside a TabX
-workspace, seeded from the platform's boilerplate. Every spec, plan, task, and line of code
+This is the governing document for **this app** — an app that lives inside a workspace on the
+platform. Every spec, plan, task, and line of code
 written here must comply with it. Where this document and any other file in this repo
 disagree, **this document wins**. You may only work inside the constraints below: they are
 not preferences, they are the shape of the runtime this app deploys to.
@@ -77,7 +77,7 @@ The runtime is fixed, and it is not negotiable from inside a spec.
    a pass token; the frontend reads it **once at boot**, holds it **in memory only**, and
    attaches it to every backend call for the proxy to validate. It is **never** written to
    `localStorage`, `sessionStorage`, cookies, or any other browser storage.
-3. **A missing token is a rendered state**, in words ("opened outside TabX"), never a blank
+3. **A missing token is a rendered state**, in words ("opened outside the platform"), never a blank
    screen or a loop of failing requests.
 4. **Authorization is the manifest's.** What this app may reach — tools, connections,
    playbooks, SDK capabilities — is what `manifest.json` grants (Article VIII). The app
@@ -108,6 +108,9 @@ The runtime is fixed, and it is not negotiable from inside a spec.
 1. `manifest.json` — name, description, icon, tools, connections, playbooks,
    `sdk.capabilities`, env — is **injected by the platform** when this app is generated,
    and validated against `manifest.schema.json`. It is read, never hand-invented.
+   - **`name` and `description` are THIS PROJECT'S OWN.** They are where the app's identity
+     lives; no other file names the project, and nothing hardcodes a name a manifest already
+     carries.
 2. **A capability not listed in the manifest is a capability this app does not have.**
    A spec that needs a new tool, connection, or playbook asks the platform for it (a
    manifest change), never wires around it.
@@ -129,10 +132,31 @@ The runtime is fixed, and it is not negotiable from inside a spec.
 
 ## Changelog
 
+- **1.0.1** (2026-09-07) — **The template describes itself, not where it came from.** Wording
+  only: no principle added, removed or redefined.
+
+  Every mention of the platform's product name is gone — from this document, the working
+  instructions, the readme, the manifest schema's descriptions, the frontend's comments, and
+  **the sentence a real user reads when an app is opened the wrong way** (Article V §3's
+  example, which is why this is not merely cosmetic). Claims about the template's own
+  provenance are **deleted rather than reworded**: an app's repository describing itself as a
+  copy of something is describing a repository its reader cannot open. Article VIII §1 gains a
+  sub-clause saying where the project's identity actually lives — `manifest.json`'s `name` and
+  `description` — because nothing said so, and a service was hardcoding a name the manifest
+  already carried.
+
+  **What it costs, stated because an entry that reads as pure gain is a sales pitch.** A reader
+  of this repository can no longer tell **which** platform it was built for. `manifest.json`
+  and `memory/proxy-context.md` become the only places that describe the platform's side of the
+  contract, and whoever hands over a clone has to say what it plugs into. That is accepted: the
+  name was in twenty-three files and none of them was the right place to learn it.
+
+  PATCH: wording and one clarifying sub-clause; no rule changes meaning, and no mechanism is
+  added. Owner's decision.
+
 - **1.0.0** (2026-09-06) — Initial ratification, shipped with the boilerplate. Establishes
   spec-driven development, the two-project layout, the serverless constraints (one stateless
   Lambda behind the `{path, method, query, body}` envelope; a static SPA; errors never
   escape the handler), platform-owned identity (proxy context in, pass token in memory
   only), single-module config, the no-committed-secrets rule, and the manifest as the
-  platform contract. Adapted in form from the TabX constitution; the content is this
-  runtime's own.
+  platform contract. The content is this runtime's own.

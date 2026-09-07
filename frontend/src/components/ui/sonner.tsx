@@ -14,7 +14,7 @@ import { Toaster as Sonner } from 'sonner';
  * Two changes from what the registry generates, both from FR-009's review pass:
  *
  *  - it ships `useTheme()` from `next-themes` to follow a light/dark preference.
- *    TabX has ONE theme (FR-001) and is not a Next.js app, so the theme is
+ *    this app has ONE theme and is not a Next.js app, so the theme is
  *    pinned to `light` and the dependency is not used.
  *  - `animate-spin` on the loading icon is kept: that is core Tailwind, not the
  *    tw-animate-css plugin this project does not install.

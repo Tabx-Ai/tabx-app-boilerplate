@@ -14,7 +14,7 @@
   app never decodes or verifies it. It is never written to `localStorage`, `sessionStorage`,
   or a cookie — a stored credential outlives the grant it represents, and a template cannot
   know how long that is.
-- **No token → a rendered sentence** ("opened outside TabX"), and the client refuses to fire.
+- **No token → a rendered sentence** ("opened outside the platform"), and the client refuses to fire.
   A blank screen or a loop of 401s teaches a user the app is broken; the sentence teaches them
   how to open it.
 - **The fake context in the dev harness is a dev convenience** (`x-dev-user` /

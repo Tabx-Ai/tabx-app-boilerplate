@@ -5,7 +5,7 @@
 
 This spec is the **worked example** every later spec copies: it records what the seed this app
 started from contains, in the five-file format the constitution requires. It was implemented by
-the platform (TabX spec 099) before this app existed; its eval is the template's own gate.
+the platform before this app existed; its eval is this baseline's own gate.
 
 ---
 
@@ -34,7 +34,7 @@ and the decisions have a place a session can read instead of re-deriving them fr
   folder routing, TanStack Query, and React Hook Form.
 - **FR-007** The client (`src/api/client.ts`) sends every call as the backend envelope through
   the platform proxy; the **pass token** is read once at boot from the URL, held in memory
-  only, and attached to every call; a missing token renders the "opened outside TabX" state
+  only, and attached to every call; a missing token renders the "opened outside the platform" state
   and the client refuses to fire.
 - **FR-008** One sample service (`hello`) and one sample page prove the whole chain, both
   labelled throwaway in their own code.

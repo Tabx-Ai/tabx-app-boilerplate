@@ -1,8 +1,11 @@
 # CLAUDE.md — Working Instructions
 
-Instructions for the AI builder working on **this app** — a vibecoded app inside a TabX
-workspace, seeded from the platform's boilerplate. `AGENTS.md` includes this file
-(`@CLAUDE.md`), so both names resolve to the same instructions.
+Instructions for the AI builder working on **this app** — an app that runs inside a workspace
+on the platform. `AGENTS.md` includes this file (`@CLAUDE.md`), so both names resolve to the
+same instructions.
+
+**This app's own name and description live in `manifest.json`** — injected by the platform when
+the app is created. Read them; never invent a name for the project somewhere else.
 
 ## Read the constitution first (REQUIRED)
 
@@ -31,7 +34,8 @@ assumptions out loud.
 .
 ├── constitution.md      ← the law; read first
 ├── stack.md             ← libraries: ships / may add / refused
-├── manifest.json        ← what the platform granted this app (injected; read, never invent)
+├── manifest.json        ← this project's NAME and DESCRIPTION, plus what the platform
+│                         granted this app (injected; read, never invent)
 ├── manifest.schema.json
 ├── specs/  ·  memory/   ← the design record and durable findings
 ├── .claude/skills/      ← hono · shadcn · sdd · implement

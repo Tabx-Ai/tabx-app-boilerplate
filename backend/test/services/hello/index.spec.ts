@@ -1,16 +1,24 @@
 /** Mirrors src/services/hello/. The service is throwaway; the PATTERN it proves is not. */
 import { describe, expect, it } from 'vitest';
 
+import { config } from '../../../src/config/index.js';
 import { hello, helloInputSchema } from '../../../src/services/hello/index.js';
 
 const ctx = { userId: 'u-1', workspaceId: 'w-9', displayName: 'Ada' };
+
+/**
+ * The app name is CONFIG's, not a literal in the service (spec 101 FR-006) — its deployed
+ * value mirrors manifest.json's `name`. Read it from the same place the service does, so
+ * this test cannot pass while the service has quietly gone back to hardcoding one.
+ */
+const appName = config().app.name;
 
 describe('the sample service', () => {
   it('greets the asked-for name', () => {
     expect(hello({ name: 'Grace' }, ctx)).toEqual({
       message: 'Hello, Grace.',
       workspaceId: 'w-9',
-      app: 'boilerplate-app',
+      app: appName,
     });
   });
 

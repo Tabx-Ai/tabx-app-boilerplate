@@ -6,6 +6,7 @@
  */
 import { z } from 'zod';
 
+import { config } from '../../config/index.js';
 import type { AppContext } from '../../context.js';
 
 /** Query values are strings (memory/entry-contract.md); parse them here, never upstream. */
@@ -31,6 +32,8 @@ export function hello(input: HelloInput, ctx: AppContext): HelloResponse {
   return {
     message: `Hello, ${who}.`,
     workspaceId: ctx.workspaceId,
-    app: 'boilerplate-app',
+    // The app's name comes from config, whose deployed value mirrors manifest.json's
+    // `name` — the one place this project's identity lives. Never a literal here.
+    app: config().app.name,
   };
 }

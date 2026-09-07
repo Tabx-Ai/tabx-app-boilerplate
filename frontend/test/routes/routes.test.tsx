@@ -40,7 +40,7 @@ describe('the token gate (constitution Article V §3)', () => {
   it('renders the opened-outside sentence — not a blank screen — when no token arrived', async () => {
     resetTokenForTests(null);
     renderAt('/');
-    expect(await screen.findByText(/opened outside TabX/i)).toBeInTheDocument();
+    expect(await screen.findByText(/opened outside the platform/i)).toBeInTheDocument();
     // And no page below the gate rendered:
     expect(screen.queryByRole('main')).not.toBeInTheDocument();
   });

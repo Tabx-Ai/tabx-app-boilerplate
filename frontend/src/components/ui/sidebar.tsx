@@ -267,7 +267,7 @@ const Sidebar = React.forwardRef<
 )
 Sidebar.displayName = "Sidebar"
 
-// No forwardRef: TabX's Button (spec 003) types its props as
+// No forwardRef: this template's Button types its props as
 // ButtonHTMLAttributes, which carries no `ref`, and rewriting that reviewed
 // component for one call site is the wrong trade (spec 010 FR-009).
 const SidebarTrigger = ({

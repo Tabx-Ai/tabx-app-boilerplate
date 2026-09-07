@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "The app's frontend — a static Vite + React SPA on Tailwind v4 + shadcn/ui, cloned from the platform's base. Talks to the backend only through src/api/client.ts (the envelope + the pass token).",
+  "description": "The app's frontend — a static Vite + React SPA on Tailwind v4 + shadcn/ui. Talks to the backend only through src/api/client.ts (the envelope + the pass token).",
   "engines": {
     "node": ">=20"
   },

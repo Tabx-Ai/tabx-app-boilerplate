@@ -7,6 +7,21 @@ refused, because the constitution's constraints already decided.
 Changing this file is a spec-level decision (constitution Article II): a dependency is part of
 the design, never something added in passing.
 
+## Where a generated app runs
+
+Two hostnames, and **they are different origins** — which is the fact most likely to be
+forgotten, because everything else about the app looks same-origin:
+
+| What | Where | Served by |
+| --- | --- | --- |
+| the **SPA** | `<slug>.apps.<domain>` | static files behind a CDN, one folder per app |
+| its **backend** | `<slug>.api.<domain>` | the platform's proxy, which turns a request into the invocation envelope and calls the app's function |
+
+The consequence to design for: **a call from the SPA to its own backend is cross-origin.** It
+needs the platform edge's permission headers, and a browser will send a preflight before
+anything carrying an `Authorization` header. Nothing about this is configurable per app — the
+slug in the SPA's hostname is what names the backend's.
+
 ## backend/ — Hono on AWS Lambda
 
 **Ships:**

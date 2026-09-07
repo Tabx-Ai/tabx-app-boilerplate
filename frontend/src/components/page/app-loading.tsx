@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 
 /**
- * The whole-page loading indicator: the TabX mark with an indeterminate progress
+ * The whole-page loading indicator: the the app mark with an indeterminate progress
  * bar under it, centred in whatever area is waiting.
  *
  * It replaces the bare `Loading…` paragraph that used to sit in the session gate

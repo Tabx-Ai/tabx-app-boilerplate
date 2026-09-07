@@ -34,7 +34,7 @@ export interface PageLink {
    * something false and corrected itself, and whoever read the zero has no way to know it
    * happened. So "unknown" shows no number at all (FR-006, FR-007).
    *
-   * **There is deliberately no trend, delta or comparison.** TabX records no history, so a
+   * **There is deliberately no trend, delta or comparison.** the app records no history, so a
    * percentage here could only be invented — and a page that looks more finished for being
    * wrong is worse than a plain one (FR-005).
    */

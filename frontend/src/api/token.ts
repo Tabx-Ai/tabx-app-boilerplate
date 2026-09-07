@@ -27,7 +27,7 @@ export function bootToken(): void {
   }
 }
 
-/** The token, or null when the app was opened outside TabX. */
+/** The token, or null when the app was opened outside the platform. */
 export function getToken(): string | null {
   return passToken;
 }

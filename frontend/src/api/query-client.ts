@@ -11,7 +11,7 @@ import { QueryClient } from '@tanstack/react-query';
  *
  *  - `retry: 1`      — one retry absorbs a dropped connection; more just delays
  *                      the error a user is waiting for.
- *  - no refetch on window focus — TabX is a workspace people leave open; refetching
+ *  - no refetch on window focus — a workspace is left open; refetching
  *                      everything on every tab switch is traffic nobody asked for.
  *  - `staleTime: 5s` — two components mounting together share one request. Note the
  *                      consequence: a list will NOT refetch on mount within that

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "tabx-app-manifest",
-  "title": "TabX app manifest",
-  "description": "What the platform granted this app. Injected by Architect at generation time; validated by backend/test/manifest.spec.ts. additionalProperties stays true on purpose: an app generated today must remain valid as the platform adds fields (forward compatibility is asserted by a test, not hoped for). Array items are strings for now — their final shape (name vs id vs object) is the Architect spec's decision, and widening a string to an object is a non-breaking schema change under this contract.",
+  "$id": "app-manifest",
+  "title": "App manifest",
+  "description": "This project's own name and description, plus what the platform granted this app. Injected by Architect at generation time; validated by backend/test/manifest.spec.ts. additionalProperties stays true on purpose: an app generated today must remain valid as the platform adds fields (forward compatibility is asserted by a test, not hoped for). Array items are strings for now — their final shape (name vs id vs object) is the Architect spec's decision, and widening a string to an object is a non-breaking schema change under this contract.",
   "type": "object",
   "additionalProperties": true,
   "required": ["name", "description", "icon", "tools", "connections", "playbooks", "sdk", "env"],

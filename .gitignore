@@ -1,5 +1,6 @@
-# The standalone mirror's own ignore rules (TabX's root .gitignore is not part of the
-# subtree, so a clone of this repo would otherwise show installs and builds as untracked).
+# This project's ignore rules. They are complete on their own: a clone of this repository
+# inherits nothing from anywhere else, so everything an install or a build produces is
+# listed here rather than assumed.
 
 # Installs — the lockfiles ARE committed, on purpose: peer resolution rides them
 # (memory/layout.md), so a clone runs `npm ci`, never a fresh resolve.

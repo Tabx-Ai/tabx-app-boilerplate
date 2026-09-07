@@ -7,7 +7,7 @@
 | E003 | SC-003, FR-004 | `(cd backend && npm test -- manifest)` | The committed manifest validates; a copy with an unknown key also validates; all eight fields present. |
 | E004 | FR-007 | `(cd frontend && npm test)` | The client-envelope, token-attachment, no-token-state and one-`main` cases pass. |
 
-## Results — implemented by the platform (TabX spec 099); its gate ran these cases
+## Results — implemented by the platform before this app existed; its gate ran these cases
 
 See the platform's record for the run. In THIS repo, re-run E001–E004 after any change to the
 seeded files — they are the baseline the first feature spec builds on.
