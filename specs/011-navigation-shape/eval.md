@@ -34,8 +34,9 @@ Run in `apps/boilerplate/frontend` unless a case says otherwise.
 
 ## Results — run 2026-09-07
 
-**Eleven of twelve pass**; the twelfth needs a mirror push the owner has not authorised, and
-everything it asserts was verified in place.
+**Eleven of twelve passed on the day**; the twelfth needed a mirror push, which is the owner's
+gate. It was authorised and run 2026-09-08, so **all twelve now pass**. See the addendum at the
+foot of this file.
 
 | Case | Result | Evidence |
 | --- | --- | --- |
@@ -50,7 +51,7 @@ everything it asserts was verified in place.
 | **E009** | **pass** | The existing suites are unchanged in outcome; the section sidebar wraps a page and its `<nav>` contains **no** `main`, with exactly one on the screen. |
 | **E010** | **pass** | The navigation Article states all of it: use these if navigation is needed, one destinations list, the sidebar wraps the page, a section root matches exactly, two named landmarks, navigation evaluates no rules, and **an app that needs none renders neither**. |
 | **E011** | **pass** | Frontend **78 tests**, typecheck clean, build clean. |
-| **E012** | **held** | Constitution **2.3.0 → 2.4.0** (MINOR, Article XIII appended) with the cost named. The clone-from-the-mirror half needs a push that is the owner's gate. |
+| **E012** | **pass** (closed 2026-09-08) | Constitution **2.3.0 → 2.4.0** (MINOR, Article XIII appended) with the cost named. The clone-from-the-mirror half **ran 2026-09-08 and is green** — see the addendum. |
 
 ## What the run found
 
@@ -69,3 +70,18 @@ everything it asserts was verified in place.
   matching the newest entry. **Every amendment is a string replace against a heading — which is
   the operation that deletes one — so the check has to be structural.** All three assertions
   were watched failing; deleting the Governance heading turns **three** of them red.
+
+
+### Addendum — mirror pushed and cloned, 2026-09-08
+
+The owner authorised the push. `git subtree split --prefix=apps/boilerplate` from `main` produced
+`cb5167e`, a **fast-forward** over the mirror's `3c7383b`, pushed to
+`Tabx-Ai/tabx-app-boilerplate` `main`. Confirmed **by tree hash**, as the task asks:
+mirror `229928a` == `main:apps/boilerplate` `229928a`.
+
+A **fresh clone** of the mirror (not this working tree) then ran:
+
+| From the clone | Result |
+| --- | --- |
+| `backend/` — `npm ci && npm test && npm run typecheck` | **76/76**, typecheck clean |
+| `frontend/` — `npm ci && npm test && npm run typecheck && npm run build` | **78/78**, typecheck clean, build clean |

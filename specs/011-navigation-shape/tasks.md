@@ -50,7 +50,7 @@
 - [x] T020 `stack.md`: both recorded as provided primitives (FR-015)
 - [x] T021 `apps/boilerplate/memory/`: the three traps — the order rule, the exact-match case,
       and one copy of the current-item logic (FR-015)
-- [ ] T022 Re-push the mirror (FR-016) — **HELD: pushing is the owner's gate and they are away.**
+- [x] T022 Re-push the mirror (FR-016) — **Mirror pushed 2026-09-08** (owner authorised): `git subtree split --prefix=apps/boilerplate` → `Tabx-Ai/tabx-app-boilerplate` `main` at `cb5167e`, a fast-forward from `3c7383b`. Confirmed **by tree hash** as the task asks: mirror `229928a` == `main:apps/boilerplate` `229928a`. A **fresh clone** then ran green: backend **76** tests + typecheck, frontend **78** tests + typecheck + build.
 - [x] T023 Move this spec's `Status:` line in the commit that moves the work (Workflow §8)
 
 ## Phase 6: Verify

@@ -1,7 +1,8 @@
 # Spec 012 — The `tabx` SDK: a limited, read-only client for the platform this app lives inside
 
-**Status:** implemented — 23 of 24 tasks green, eval **11 of 12**. The held task is the mirror
-push (the owner's gate). **E011 fails on a hit this spec did not create** — a platform hostname
+**Status:** implemented — **24 of 24 tasks green, eval 11 of 12**. The mirror push was
+authorised and run 2026-09-08, so E012 is now proven from a fresh clone; **E011 still fails on a
+hit this spec did not create** — a platform hostname
 used as a test fixture in `frontend/test/config/derive-api-base.test.ts`, which arrived with
 spec 005; reported rather than fixed, since it is outside this spec's target.
 **Target:** `backend/src/tabx/` (**new — contract, client, interface**), `backend/src/config/`,

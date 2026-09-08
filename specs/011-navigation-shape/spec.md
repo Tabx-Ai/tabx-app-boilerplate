@@ -1,7 +1,7 @@
 # Spec 011 — The navigation shape: a mini rail and a section sidebar, shipped unused, with the rule in the constitution
 
-**Status:** implemented — 23 of 24 tasks green, eval **11 of 12**. The held task is the mirror
-push (the owner's gate). **One requirement was not followed and the deviation is recorded:**
+**Status:** implemented — **24 of 24 tasks green, eval 12 of 12**. The mirror push was
+authorised and run 2026-09-08, and E012 now passes from a fresh clone. **One requirement was not followed and the deviation is recorded:**
 FR-005 asks the components to compose the vendored sidebar primitive; they are built from the
 same tokens instead, because that primitive requires a provider in an ancestor and persists its
 state in a cookie — a context and a cookie imposed on every app adopting a component this

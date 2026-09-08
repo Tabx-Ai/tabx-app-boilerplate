@@ -40,8 +40,9 @@ Run in `apps/boilerplate` (each project's own suite) unless a case says otherwis
 
 ## Results — run 2026-09-07
 
-**Twelve of thirteen pass. E013's mirror-clone half is held**, because pushing the mirror is the
-owner's gate and they are away; everything it asserts was verified in place.
+**Twelve of thirteen passed on the day; the thirteenth — E013's mirror-clone half — was held
+because pushing the mirror is the owner's gate. It was authorised and run 2026-09-08, so
+**all thirteen now pass**. See the addendum at the foot of this file.
 
 | Case | Result | Evidence |
 | --- | --- | --- |
@@ -57,7 +58,7 @@ owner's gate and they are away; everything it asserts was verified in place.
 | **E010** | **pass** | One guarded route and one open route on the sample, so the pattern and its absence are both visible. The decisions route lives in a **normal service folder** with the three files, not inside the rule library. |
 | **E011** | **pass** | **Ten guards on one screen produce one request.** |
 | **E012** | **pass** | Three empty renders, asserted **separately**: pending, failed, and an undeclared policy. Plus a supplied fallback rendering in place of the children. |
-| **E013** | **pass in place; mirror half held** | Backend **56** tests, frontend **60**, both typechecks clean, frontend build clean. Constitution **2.2.0 → 2.3.0** (MINOR, Article XII appended) with the cost named **and** the four-to-five amendment recorded. The clone-from-the-mirror half needs a push the owner has not authorised. |
+| **E013** | **pass** (mirror half closed 2026-09-08) | Backend **56** tests, frontend **60**, both typechecks clean, frontend build clean. Constitution **2.2.0 → 2.3.0** (MINOR, Article XII appended) with the cost named **and** the four-to-five amendment recorded. The clone-from-the-mirror half **ran 2026-09-08 and is green** — see the addendum. |
 
 ## What the run found
 
@@ -72,3 +73,18 @@ owner's gate and they are away; everything it asserts was verified in place.
 - **The staleness is inherited and stated, not fixed.** A predicate reading the role reads a
   value the platform caches with no eviction event, so a revoked role can keep granting for
   about a minute. Bounded by E009's enforcement running on **every** operation.
+
+
+### Addendum — mirror pushed and cloned, 2026-09-08
+
+The owner authorised the push. `git subtree split --prefix=apps/boilerplate` from `main` produced
+`cb5167e`, a **fast-forward** over the mirror's `3c7383b`, pushed to
+`Tabx-Ai/tabx-app-boilerplate` `main`. Confirmed **by tree hash**, as the task asks:
+mirror `229928a` == `main:apps/boilerplate` `229928a`.
+
+A **fresh clone** of the mirror (not this working tree) then ran:
+
+| From the clone | Result |
+| --- | --- |
+| `backend/` — `npm ci && npm test && npm run typecheck` | **76/76**, typecheck clean |
+| `frontend/` — `npm ci && npm test && npm run typecheck && npm run build` | **78/78**, typecheck clean, build clean |

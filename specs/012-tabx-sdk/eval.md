@@ -59,7 +59,24 @@ All cases run in `apps/boilerplate/backend` unless stated. The platform half —
   tests above it had already warmed the module. It resets the module graph and re-imports. A
   version of that case without the reset passes while testing the cached value — worth knowing
   before adding another config-sensitive case.
-- **E012 ran against this working tree, not a fresh clone of the mirror.** The mirror push is
-  held (the owner's gate), so "green from a fresh clone" is unproven for this spec's commit.
+- **E012 originally ran against this working tree, not a fresh clone of the mirror**, because the
+  push was held (the owner's gate). It was authorised and run **2026-09-08**, and E012 is now
+  proven from a genuine fresh clone — see the addendum at the foot of this file. **E011 is
+  unaffected and still fails** (S020: a platform hostname as a test fixture, from spec 005).
 - **No live platform call was made.** Every case here runs against a stubbed `fetch`; there is
   no deployed generated app to run a real one from.
+
+
+### Addendum — mirror pushed and cloned, 2026-09-08
+
+The owner authorised the push. `git subtree split --prefix=apps/boilerplate` from `main` produced
+`cb5167e`, a **fast-forward** over the mirror's `3c7383b`, pushed to
+`Tabx-Ai/tabx-app-boilerplate` `main`. Confirmed **by tree hash**, as the task asks:
+mirror `229928a` == `main:apps/boilerplate` `229928a`.
+
+A **fresh clone** of the mirror (not this working tree) then ran:
+
+| From the clone | Result |
+| --- | --- |
+| `backend/` — `npm ci && npm test && npm run typecheck` | **76/76**, typecheck clean |
+| `frontend/` — `npm ci && npm test && npm run typecheck && npm run build` | **78/78**, typecheck clean, build clean |

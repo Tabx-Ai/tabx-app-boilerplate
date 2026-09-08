@@ -1,7 +1,7 @@
 # Spec 010 — The policy engine: one `policies/` folder, allow-to-all by default, and a `RoleGuard` that asks the backend
 
-**Status:** implemented — 28 of 29 tasks green, eval **12 of 13**. The one held task is the
-mirror push, which is the owner's gate; everything E013 asserts was verified in place
+**Status:** implemented — **29 of 29 tasks green, eval 13 of 13**. The mirror push was
+authorised and run 2026-09-08, and E013's clone half now passes from a fresh clone
 **Target:** `backend/src/policies/` (**a fifth top-level home**, which amends 004),
 `frontend/` (`RoleGuard` and the decisions hook), `constitution.md`, `stack.md`, `memory/`.
 **Depends on:** **004** (the layering this amends), **005** (the client the guard's call rides),

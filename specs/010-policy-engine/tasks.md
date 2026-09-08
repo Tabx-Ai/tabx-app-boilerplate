@@ -57,7 +57,7 @@
 - [x] T025 `stack.md`: `policies/` as a home, `RoleGuard` as a primitive (FR-020)
 - [x] T026 `apps/boilerplate/memory/`: the two sharp edges — the guard is not enforcement, an
       undeclared name refuses (FR-021)
-- [ ] T027 Re-push the mirror (FR-022) — **HELD: pushing is the owner's gate, and they are away. The subtree command is in the platform's `memory/vibecoded-apps.md`; confirm by tree hash.**
+- [x] T027 Re-push the mirror (FR-022) — **Mirror pushed 2026-09-08** (owner authorised): `git subtree split --prefix=apps/boilerplate` → `Tabx-Ai/tabx-app-boilerplate` `main` at `cb5167e`, a fast-forward from `3c7383b`. Confirmed **by tree hash** as the task asks: mirror `229928a` == `main:apps/boilerplate` `229928a`. A **fresh clone** then ran green: backend **76** tests + typecheck, frontend **78** tests + typecheck + build.
 - [x] T028 Move this spec's `Status:` line in the commit that moves the work (Workflow §8)
 
 ## Phase 6: Verify
