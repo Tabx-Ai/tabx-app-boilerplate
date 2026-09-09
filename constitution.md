@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 2.5.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-07
+**Version:** 2.5.1  **Ratified:** 2026-09-06  **Last amended:** 2026-09-09
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -91,6 +91,12 @@ The runtime is fixed, and it is not negotiable from inside a spec.
 2. **The pass token is transport, not truth.** The app opens with a pass token on the URL; the
    frontend reads it **once at boot** and attaches it to every backend call for the proxy to
    validate. The app never decodes or verifies it.
+   - **On the gate's own path, the GATE is the reader — nothing else may consume the URL
+     token.** *Boot* and *the gate* are one page load but two responsibilities, and reading them
+     as one moment is not theoretical: the boot reader consumed `?token=` and scrubbed the URL
+     before the gate rendered, so the gate found nothing and **refused every launch of every
+     deployed app without making a single call**. Whoever reads the URL must be the one that
+     validates before storing, which is the gate and only the gate.
    - **It lives in `sessionStorage`, and nowhere else.** It survives a refresh — the gate
      scrubs the token from the URL, so without this a refresh strands the user on a page they
      cannot reload — and it **dies with the tab**.
@@ -358,6 +364,23 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **2.5.1** (2026-09-09) — **The gate reads the token it was sent.** Clarifies **Article V §2**.
+
+  Why: §2 said the frontend reads the pass token *"once at boot"*, and Article V's gate says a
+  token is validated **before** anything is stored. Both were implemented, by different code, and
+  each read "boot" as its own moment — so the boot reader took `?token=` and scrubbed the URL, and
+  one tick later the gate looked, found nothing, and sent the visitor to the dead end **without
+  calling the platform at all**. Every launch of every deployed app was refused.
+
+  §2 now says which reader owns the URL on the gate's path. **Nothing is redefined** — both
+  clauses stood, and the sentence names the boundary between them, so this is a PATCH.
+
+  **What is worth carrying away is not the wiring but why the tests were green.** Every case
+  rendered the route tree directly and none called the boot reader, because that call lives in
+  `main.tsx` — one line of bootstrap, absent from every test-built application. A behaviour that
+  exists only in a real entry point is untested by construction. See
+  `specs/013-launch-arrival` and `memory/`.
 
 - **2.5.0** (2026-09-07) — **A limited client for the platform.** Adds **Article XIV**.
 

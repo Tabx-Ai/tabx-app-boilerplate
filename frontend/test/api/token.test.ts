@@ -36,7 +36,8 @@ afterEach(() => {
 
 describe('reading the token', () => {
   it('takes it from the URL, stores it, and scrubs the address bar', () => {
-    at('/authorize?token=tok-url&keep=me');
+    // NOT the gate's path: the gate owns the URL there (spec 013 FR-003).
+    at('/app/things?token=tok-url&keep=me');
 
     bootToken();
 
@@ -60,9 +61,9 @@ describe('reading the token', () => {
     expect(hasToken()).toBe(true);
   });
 
-  it('lets a URL token REPLACE a stored one — arriving at the gate is a re-authorization', () => {
+  it('lets a URL token REPLACE a stored one — an explicit token on the URL wins', () => {
     window.sessionStorage.setItem(KEY, 'tok-old');
-    at('/authorize?token=tok-new');
+    at('/app/things?token=tok-new');
 
     bootToken();
 
@@ -74,6 +75,48 @@ describe('reading the token', () => {
     bootToken();
     expect(getToken()).toBeNull();
     expect(hasToken()).toBe(false);
+  });
+});
+
+describe('the gate owns the URL on its own path (spec 013 FR-003)', () => {
+  /**
+   * The bug this pins refused **every launch of every deployed app**, and it is invisible from
+   * inside this file's other cases: `bootToken()` consumed `?token=` on every path, so by the
+   * time the gate rendered the query string was already stripped and it refused *without making
+   * any call* — its own words, *"No ping is made: there is nothing to validate."*
+   *
+   * The gate must be the reader there, because it is the only one that validates **before**
+   * storing. See `launch-arrival.test.tsx` for the same property at the route level, which is
+   * where the failure actually shows.
+   */
+  it('leaves the URL alone and stores nothing on /authorize', () => {
+    at('/authorize?token=tok-url');
+
+    bootToken();
+
+    // Untouched, so the gate can still read it.
+    expect(new URL(window.location.href).searchParams.get('token')).toBe('tok-url');
+    // And NOT stored: an unvalidated token in storage is what the gate's order exists to prevent.
+    expect(window.sessionStorage.getItem('pass-token')).toBeNull();
+    expect(getToken()).toBeNull();
+  });
+
+  it('still finds a STORED token on /authorize — a refresh at the gate is not a lockout', () => {
+    window.sessionStorage.setItem('pass-token', 'tok-stored');
+    at('/authorize');
+
+    bootToken();
+
+    expect(getToken()).toBe('tok-stored');
+  });
+
+  it('treats /authorize/ the same — a trailing slash is the same route', () => {
+    at('/authorize/?token=tok-url');
+
+    bootToken();
+
+    expect(new URL(window.location.href).searchParams.get('token')).toBe('tok-url');
+    expect(getToken()).toBeNull();
   });
 });
 
@@ -122,7 +165,7 @@ describe('what must never happen to it', () => {
     vi.stubGlobal('sessionStorage', throwing);
     Object.defineProperty(window, 'sessionStorage', { value: throwing, configurable: true });
 
-    at('/authorize?token=tok-url');
+    at('/app/things?token=tok-url');
     expect(() => bootToken()).not.toThrow();
     // The in-memory slot still holds it, so this tab works; a refresh needs the gate again.
     expect(getToken()).toBe('tok-url');

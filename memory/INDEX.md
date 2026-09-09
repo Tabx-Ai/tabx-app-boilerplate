@@ -13,3 +13,4 @@ One line per memory; read the relevant file before touching its area, and add yo
 - [Policies](policies.md) — code in one folder; the server enforces and RoleGuard advises; the `satisfies` widening, and the staleness inherited from the platform's identity cache.
 - [Navigation](navigation.md) — a rail and a section sidebar, provided and used by nothing; the three traps, and why the constitution now has a shape test.
 - [The platform SDK](platform-sdk.md) — one token reader, six read-only methods; the SDK limits what is easy, not what is possible; the cold-start config trap in its tests.
+- [The boot order](boot-order.md) — `bootToken()` must not consume `?token=` on `/authorize`; it did, and every launch was refused. Why 83 green tests missed it.

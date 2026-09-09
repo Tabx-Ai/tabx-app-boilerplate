@@ -46,14 +46,59 @@ function writeStored(token: string): void {
 const KEY = 'pass-token';
 
 /**
+ * The gate's own path. **Read from `window.location`, not from the router**, because
+ * `bootToken()` runs in `main.tsx` before any router exists — which is precisely the ordering
+ * that produced the bug this constant exists to fix.
+ *
+ * Deliberately imported by nothing else: the route table takes its paths from the generated
+ * file, so a shared constant would imply a coupling that is not there.
+ */
+const GATE_PATH = '/authorize';
+
+/** `/authorize` and `/authorize/` are the same route to the router, so they are here too. */
+function onGatePath(): boolean {
+  const path = window.location.pathname;
+  return path === GATE_PATH || path === `${GATE_PATH}/`;
+}
+
+/**
  * Read the token once: `sessionStorage` first, then `?token=` on the URL.
  *
  * A URL token is **stored and scrubbed** — the URL was its transport, not its home, and a
  * token left in the address bar is copied into every shared link.
+ *
+ * ## ON THE GATE'S PATH THIS READS STORAGE AND NOTHING ELSE (spec 013 FR-003)
+ *
+ * **This is the fix for a bug that refused every launch of every deployed app**, and it is worth
+ * the paragraph because the broken version looks more correct than this one.
+ *
+ * The platform opens an app at `/authorize?token=…`. This function used to consume that token on
+ * every path — store it, and strip it from the URL with `replaceState`. One tick later the gate
+ * rendered, read `?token=`, found **null**, and refused *without making any call at all*: its
+ * own comment reads *"No ping is made: there is nothing to validate."* Two consumers of a
+ * one-shot input, and the earlier one won.
+ *
+ * So the gate owns the URL on its own path. It reads the token, **validates it with the platform
+ * before storing anything** (006's order, and the reason the cheap fix of reading `getToken()`
+ * here is wrong: that stores first and leaves a live credential behind on every refusal), and
+ * then redirects with `Navigate … replace` — which is what drops the token-bearing URL out of
+ * history. **The scrub still happens; it happens by navigation instead of by `replaceState`.**
+ *
+ * Everywhere else this is unchanged, and that matters: an in-app **refresh** is the case
+ * `bootToken()` was added for, and it still finds the stored token.
  */
 export function bootToken(): void {
   if (booted) return;
   booted = true;
+
+  /*
+    The gate is about to read the query string itself. Touching it here — or storing an
+    unvalidated token — is the bug.
+  */
+  if (onGatePath()) {
+    passToken = readStored();
+    return;
+  }
 
   const url = new URL(window.location.href);
   const fromUrl = url.searchParams.get('token');
