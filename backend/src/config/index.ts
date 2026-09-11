@@ -27,6 +27,21 @@ export const envSchema = z.object({
    * optional-integration shape.
    */
   TABX_URL: z.url().optional(),
+  /**
+   * This app's own Postgres connection string (constitution Article XV) — the platform's
+   * Session Pooler shape, scoped to this app's own database. **Optional in this schema**,
+   * mirroring `TABX_URL` exactly: every app HAS a schema (the platform provisions one
+   * unconditionally), but not every generated app persists anything, so a required key here
+   * would make every clone depend on a live Postgres connection just to boot.
+   */
+  OLTP_URL: z.string().min(1).optional(),
+  /**
+   * This app's own schema name inside that connection, e.g. `app_<id-without-hyphens>` — the
+   * platform derives it and injects it; this app never computes it. Optional for the same
+   * reason as `OLTP_URL`; the two arrive together in practice, and the persistence client
+   * fails naming whichever is actually missing.
+   */
+  OLTP_SCHEMA: z.string().min(1).optional(),
 });
 
 /** Every key the config module reads — asserted equal to `.env.example` by a test. */
@@ -41,6 +56,15 @@ export interface AppConfig {
   /** The platform integration. `url` is `undefined` when this app never calls the platform. */
   tabx: {
     url: string | undefined;
+  };
+  /**
+   * This app's own database (Article XV). Both fields are `undefined` together in practice —
+   * they arrive from the same platform injection — but each is read and checked independently,
+   * so a partially-set pair still names the actual missing one rather than a generic complaint.
+   */
+  persistent: {
+    url: string | undefined;
+    schema: string | undefined;
   };
 }
 
@@ -76,6 +100,10 @@ export function loadConfig(
     },
     tabx: {
       url: values.TABX_URL,
+    },
+    persistent: {
+      url: values.OLTP_URL,
+      schema: values.OLTP_SCHEMA,
     },
   };
 }

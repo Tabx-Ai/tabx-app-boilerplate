@@ -25,9 +25,12 @@
  *
  * ## Today
  *
- * Empty on purpose. A generated app adds its first client here in its own spec, together with
- * the repository that reaches it — and the manifest entry that granted it (Article VIII §2:
- * a connection this app was not granted is one it does not have).
+ * **`persistent/` is the first client** (constitution Article XV) — a `pg.Pool` reaching the
+ * Postgres schema the platform provisions for every app, unconditionally. A generated app that
+ * needs a SECOND persistence client (a cache, an object store) adds it here as a sibling
+ * folder, in its own spec, together with the repository that reaches it and the manifest entry
+ * that granted it (Article VIII §2: a connection this app was not granted is one it does not
+ * have).
  */
 
 export {};

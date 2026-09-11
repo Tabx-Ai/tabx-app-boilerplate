@@ -1,6 +1,6 @@
 # App Constitution
 
-**Version:** 2.5.1  **Ratified:** 2026-09-06  **Last amended:** 2026-09-09
+**Version:** 2.6.0  **Ratified:** 2026-09-06  **Last amended:** 2026-09-11
 
 This is the governing document for **this app** — an app that lives inside a workspace on the
 platform. Every spec, plan, task, and line of code
@@ -36,7 +36,7 @@ not preferences, they are the shape of the runtime this app deploys to.
 1. Code lives in exactly two places: **`frontend/`** (the SPA) and **`backend/`** (the
    Lambda). Each is an **independent npm project** with its own `package.json`, its own
    lockfile, and its own `node_modules`. Nothing is hoisted: a project that imports
-   something declares it.
+   something declares it. **§5 states one exception.**
 2. **No manifest at the app root.** The root holds this constitution, `stack.md`,
    `CLAUDE.md`/`AGENTS.md`, `manifest.json` + its schema, `specs/`, `memory/`, and
    `.claude/` — record and contract, never code.
@@ -44,6 +44,10 @@ not preferences, they are the shape of the runtime this app deploys to.
    ships; a source tree containing its own tests is one missing exclude away from shipping
    them.
 4. **Strict TypeScript in both projects**, no strictness flag opted back out.
+5. **`migrations/` is a third root-level folder** — declarative SQL, not application code.
+   It is authored by this app's own changes (never platform-injected, unlike
+   `manifest.json`), and executed only by the platform's deploy tooling, in its own
+   sandbox — never by `backend/`'s build, its boot path, or any service. See Article XV.
 
 ## Article IV — Serverless Constraints
 
@@ -352,6 +356,37 @@ service modules; this Article says what a service module *is*.
     an app which platform it can call. The exemption covers the folder, its identifiers and
     `TABX_URL`, and nothing beyond them.
 
+## Article XV — A Database, When The Platform Grants One
+
+1. **Every app is provisioned an empty Postgres schema by the platform, unconditionally**
+   (the platform's own decision, not this app's). This app reaches it through **one
+   client**, `backend/src/infrastructure/persistent/` — a folder inside `infrastructure/`,
+   which Article IX already reserves for persistence; this is not a new home.
+2. **`OLTP_URL` and `OLTP_SCHEMA`** are the two environment variables the platform injects.
+   They follow Article VI exactly: read only in `config/`, **both optional** in its schema
+   — mirroring `TABX_URL` (Article XIV §9) — so a bare clone still boots with neither set,
+   and present in all three homes Article VI §3 requires.
+3. **The client sets `search_path` to `OLTP_SCHEMA` once, at connection acquisition.** No
+   repository schema-qualifies a table name or interpolates the schema into SQL — the
+   connection carries that fact, not the query.
+4. **Only a `repository.ts` may import it** — Article IX §6's rule, unchanged, extended to
+   this specific client.
+5. **`migrations/`, at the repository root** (Article III §5), holds this app's own schema
+   changes: plain, forward-only `.sql` files named `V<N>__<name>.sql` (three-digit
+   zero-padded, double underscore) — the platform's own migrations use the identical shape,
+   so there is one convention to remember, not two.
+6. **Every migration must be safe to run more than once** — `CREATE TABLE IF NOT EXISTS`,
+   `ADD COLUMN IF NOT EXISTS`, and equivalent guards for anything not naturally idempotent.
+   The platform tracks a single high-water mark per app, not a per-file history, so a
+   migration written this way is the only thing that makes a retry safe. **This is a hard
+   rule with no runtime check behind it** — stated plainly rather than implied to be safer
+   than it is.
+7. **A shipped migration is never edited or renumbered.** Append-only, for the same reason
+   the platform's own migrations are: a file already run is a fact, not a draft.
+8. **This app never runs a migration itself** — not at boot, not from any service, not on
+   any request path. The platform's deploy tooling is the only executor, in its own
+   sandbox, entirely outside this app's own process.
+
 ## Governance
 
 1. **Amendments are versioned (semver)** — MAJOR: a principle removed or redefined;
@@ -364,6 +399,32 @@ service modules; this Article says what a service module *is*.
 ---
 
 ## Changelog
+
+- **2.6.0** (2026-09-11) — **A database this app can actually use.** Adds **Article XV**,
+  and amends **Article III §1** with a stated exception.
+
+  Why: the platform provisions every app an empty Postgres schema unconditionally, but
+  nothing here could reach it — `infrastructure/` was a reserved, empty home, and `stack.md`
+  actively refused the idea (*"this app owns no schema"*). That sentence was true when
+  written and is false now.
+
+  **What Article XV actually adds:** one client (`infrastructure/persistent/`, reachable
+  only from a `repository.ts` — Article IX §6's rule, extended rather than reinvented), two
+  environment variables shaped exactly like `TABX_URL` (optional, three homes, Article VI),
+  and a `migrations/` folder at the root — which is why Article III §1's "exactly two
+  places" gains a stated exception in the same commit rather than being left silently
+  false.
+
+  **What is given up, stated because an entry that reads as pure gain is a sales pitch.**
+  There is **no per-file migration history** — the platform tracks one integer high-water
+  mark per app, not a ledger — so **every migration must be idempotent**, a rule with
+  nothing behind it but a skill and a convention. `pg` is now a template dependency for
+  every generated app, including one that never persists anything, because every app has a
+  schema regardless of whether it uses one. And `search_path` is set once, per connection,
+  which means a repository that also schema-qualifies its own query is doing so
+  redundantly, not wrongly — a detail worth knowing before it is copied as the pattern.
+
+  MINOR: two new principles (Articles III §5 and XV); nothing removed or redefined.
 
 - **2.5.1** (2026-09-09) — **The gate reads the token it was sent.** Clarifies **Article V §2**.
 

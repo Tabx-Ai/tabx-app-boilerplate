@@ -47,6 +47,12 @@ as the last person who edited it. The **layering test** is the authority on the 
   rule is invisible at runtime: a service that imports a database still answers its route.
 - **Policies are code, in one folder**, and `RoleGuard` on the frontend is **advice about what
   to render** — the server checks every guarded operation again. See constitution Article XII.
+- **`infrastructure/persistent/` is this template's one real client** (Article XV): a `pg.Pool`
+  scoped to the schema the platform provisions for every app via `OLTP_URL`/`OLTP_SCHEMA`, both
+  optional in `config/` so a bare clone still boots. Unlike the `tabx` SDK below, it is not a
+  read-only convenience — it is the one path to this app's own persistent state, and the
+  `migrations/` folder at the repository root (not inside `backend/`) is what shapes the schema
+  it connects to.
 - **The `tabx` SDK is PROVIDED and used by nothing** (Article XIV): six read-only lookups —
   the caller, one page of members, one member, and the three organization lists. It is a sixth
   home rather than `external/` because the platform is not a third party to an app. Three
@@ -70,11 +76,17 @@ as the last person who edited it. The **layering test** is the authority on the 
 - Dev only: **`typescript`** (strict), **`vitest`**, **`@types/node`**, **`tsx`** (runs the dev
   harness).
 
+**Ships, since constitution Article XV:**
+
+- **`pg`** — the one Postgres client this template holds, at `infrastructure/persistent/`.
+  Every app is provisioned a schema unconditionally (the platform's own decision), so this is
+  not a conditional addition a future spec reaches for; it ships from the start, used or not.
+
 **May add, when a spec's work demands it:**
 
-- **`@supabase/supabase-js`** — when the manifest grants a Supabase-backed connection and a
-  spec does real work against it. The client belongs to the spec that uses it, not to the
-  template.
+- **`@supabase/supabase-js`** — when a spec wants the Supabase client SDK specifically (auth
+  helpers, storage, realtime) rather than a raw `pg` connection. The client belongs to the spec
+  that uses it, not to the template.
 - A vendor SDK for a granted **connection** (e.g. Elasticsearch, Redshift drivers) — same rule:
   the manifest grants it first, the spec that uses it declares it.
 
@@ -83,10 +95,14 @@ as the last person who edited it. The **layering test** is the authority on the 
 - **A second web framework** (Express, Fastify, Nest) — the envelope contract plus Hono is the
   whole surface.
 - **An auth library** of any kind — identity is the platform's (constitution Article V).
-- **An ORM with migrations** — this app owns no schema; persistent state lives in granted
-  connections.
+- **A full ORM** (TypeORM, Prisma, Drizzle) — raw `pg` plus the `migrations/` convention
+  (Article XV) is the whole mechanism. An ORM's own migration tooling would be a second one
+  running against the same schema the platform's deploy-time runner already tracks, and the two
+  would disagree about what has already applied.
 - **Anything holding state across invocations** (in-process caches that correctness depends on,
-  schedulers, long-lived connections assumed alive) — Article IV §2.
+  schedulers, long-lived connections assumed alive) — Article IV §2. A `pg.Pool` held at module
+  scope is not an exception to this: reusing a connection across a warm start is not state any
+  request's *correctness* depends on, only its latency.
 
 ## frontend/ — how it reaches its backend
 

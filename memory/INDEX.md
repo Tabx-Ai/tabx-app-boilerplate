@@ -14,3 +14,4 @@ One line per memory; read the relevant file before touching its area, and add yo
 - [Navigation](navigation.md) — a rail and a section sidebar, provided and used by nothing; the three traps, and why the constitution now has a shape test.
 - [The platform SDK](platform-sdk.md) — one token reader, six read-only methods; the SDK limits what is easy, not what is possible; the cold-start config trap in its tests.
 - [The boot order](boot-order.md) — `bootToken()` must not consume `?token=` on `/authorize`; it did, and every launch was refused. Why 83 green tests missed it.
+- [The persistent database](persistent-database.md) — the cold-start-singleton test trap again; `search_path` as a startup parameter, not a post-connect `SET`; why there is no per-file migration history.
